@@ -15,8 +15,8 @@
 @title{A simulator of a computer processor}
 @author{Jacob J. A. Koot}
 
-@;@defmodule["processor.rkt" #:packages ()]
-@(defmodule processor/processor #:packages ())
+@defmodule["processor.rkt" #:packages ()]
+@;@(defmodule processor/processor #:packages ())
 
 @section{Introduction}
 
@@ -272,9 +272,9 @@ Arithmetical operations are in two's complement.@(lb)Overflow is ignored.
   (@tt{(JMP Ra)} @roman{Jump to @tt{Ra}@period})
   (@tt{(JMP datum)} @roman{Jump to @tt{datum}@period})
   (@tt{(=0? Ra Rb)} @roman{If @tt{Ra}=0 jump to @tt{Rb}                else go to next instruction.})
-  (@tt{(=0? Ra datum)} @roman{Jump to @tt{datum} If @tt{Ra}=0          else go to next instruction.})
+  (@tt{(=0? Ra datum)} @roman{If @tt{Ra}=0 jump to @tt{datum}          else go to next instruction.})
   (@tt{(<0? Ra Rb)} @roman{If @tt{Ra}<0 jump to @tt{Rb}                else go to next instruction.})
-  (@tt{(<0? Ra datum)} @roman{jump to @tt{datum} If @tt{Ra}<0          else go to next instruction.})
+  (@tt{(<0? Ra datum)} @roman{If @tt{Ra}<0 jump to @tt{datum}          else go to next instruction.})
   (@tt{(>0? Ra Rb)} @roman{If @tt{Ra}>0 jump to @tt{Rb}                else go to next instruction.})
   (@tt{(>0? Ra datum)} @roman{If @tt{Ra}>0 jump to @tt{datum}          else go to next instruction.})
   (@tt{(≤0? Ra Rb)} @roman{If @tt{Ra}≤0 jump to @tt{Rb}                else go to next instruction.})
@@ -379,7 +379,7 @@ At the start of execution @tt{@bold{SP}} is 2@↑{24}@tt{@larger{@larger{-}}}1.
  (print-stack 5)]}
 
 @defparam[max-nr-of-instrs ‹n› exact-nonnegative-integer? #:value 1000]{
- Puts a limit of the number of instructions to be executed by procedure @nbr[execute].@(lb)
+ Puts a limit on the number of instructions to be executed by procedure @nbr[execute].@(lb)
  The procedure halts when the limit is exceeded.
 
  @Interaction[
