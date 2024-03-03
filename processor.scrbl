@@ -281,6 +281,7 @@ Arithmetical operations are in two's complement.@(lb)Overflow is ignored.
   (@tt{(≤0? Ra datum)} @roman{If @tt{Ra}≤0 jump to @tt{datum}          else go to next instruction.})
   (@tt{(≥0? Ra Rb)} @roman{If @tt{Ra}≥0 jump to @tt{Rb}                else go to next instruction.})
   (@tt{(≥0? Ra datum)} @roman{If @tt{Ra}≥0 jump to @tt{datum}          else go to next instruction.})
+  (@tt{(EQ? Ra Rb Rc)} @roman{If @tt{Ra}=@tt{Rb} jump to @tt{Rc}       else go to next instruction.})
   (@tt{(EQ? Ra Rb datum)} @roman{If @tt{Ra}=@tt{Rb} jump to @tt{datum} else go to next instruction.})
   (@tt{(LT? Ra Rb Rc)} @roman{If @tt{Ra}<@tt{Rb} jump to @tt{Rc}       else go to next instruction.})
   (@tt{(LT? Ra Rb datum)} @roman{If @tt{Ra}<@tt{Rb} jump to @tt{datum} else go to next instruction.})
@@ -489,7 +490,7 @@ Computes 2j+1 reading j from the @nbr[INPUT-port].
        (SET R2 2)
        (MUL R6 R6 R2)
        (ADD R6 R6 R1)
-       (PSH R6)
-       (JMP R5))))]
+       (PSH R6) (: return 2j+1)
+       (JMP R5) (: return))))]
 
 @larger{@bold{The end}}

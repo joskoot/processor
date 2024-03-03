@@ -23,6 +23,7 @@
 (define NOT bitwise-not)
 (define BIT-SET? bitwise-bit-set?)
 (define INTEGER? exact-integer?)
+(define force-bool (λ (x) (and x #t)))
 
 ;═════════════════════════════════════════════════════════════════════════════════════════════════════
 
@@ -48,8 +49,6 @@
 (define A-size 24)
 (define A-digits (quotient A-size 4))
 (define A-mask (sub1 (SHIFT 1 A-size)))
-(define A-sign-bit (sub1 A-size))
-(define A-sign-extension (SHIFT -1 A-size))
 
 (define (A-fmt-hex a)
   (string-upcase
@@ -59,15 +58,9 @@
 (define D-mask (sub1 (SHIFT 1 D-size)))
 (define D-sign-bit (sub1 D-size))
 (define D-sign-extension (AND W-mask (SHIFT -1 D-size)))
-
-(define (D-negative? d)
-  (BIT-SET? d D-sign-bit))
-
-(define (D-sign-extend d)
-  (if (D-negative? d) (IOR D-sign-extension d) d))
-
-(define (D->W d)
-  (AND W-mask (D-sign-extend d)))
+(define (D-negative? d) (BIT-SET? d D-sign-bit))
+(define (D-sign-extend d) (if (D-negative? d) (IOR D-sign-extension d) d))
+(define (D->W d) (AND W-mask (D-sign-extend d)))
 
 (struct R (name proc)
   #:property prop:object-name 0
@@ -137,7 +130,6 @@
 (define registers (list R0 R1 R2 R3 R4 R5 R6 SP))
 (define R-hash (hasheq 0 R0 1 R1 2 R2 3 R3 4 R4 5 R5 6 R6 7 SP 8 DA))
 (define (r->R r) (vector-ref R-vector r))
-(define (R->r R) (hash-ref R-hash R #f))
 
 (define (reset-registers)
   (clock
@@ -151,7 +143,7 @@
     (SP A-mask)
     (PC 0)))
 
-(define last-addr 0)
+(define last-addr 'yet-to-be-assigned)
 
 (define-syntax (clock stx)
   (syntax-case stx ()
@@ -325,9 +317,9 @@
   (unless (natural? n) (raise-argument-error 'max-nr-of-instrs "natural?" n))
   n)
 
-(define print-registers? (make-parameter #t (λ (x) (and x #t)) 'print-parameters?))
-(define print-program? (make-parameter #t (λ (x) (and x #t)) 'print-program?))
-(define print-instrs? (make-parameter #t (λ (x) (and x #t)) 'print-instrs?))
+(define print-registers? (make-parameter #t force-bool 'print-parameters?))
+(define print-program? (make-parameter #t force-bool 'print-program?))
+(define print-instrs? (make-parameter #t force-bool 'print-instrs?))
 (define max-nr-of-instrs (make-parameter 1000 max-nr-of-instrs-guard 'max-nr-of-instrs))
 
 (define (execute (program #f))
