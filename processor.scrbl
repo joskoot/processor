@@ -15,8 +15,8 @@
 @title{A simulator of a computer processor}
 @author{Jacob J. A. Koot}
 
-@;@defmodule["processor.rkt" #:packages ()]
-@(defmodule processor/processor #:packages ())
+@defmodule["processor.rkt" #:packages ()]
+@;@(defmodule processor/processor #:packages ())
 
 @section{Introduction}
 
@@ -257,7 +257,7 @@ Arithmetical operations are in two's complement.@(lb)Overflow is ignored.
  ((@tt{(STP)} @roman{Halts the processor.})
   (@tt{(NOP)} @roman{No operation.})
   (@tt{(SET Ra Rb)} @roman{@tt{Ra} ← @tt{Rb}@period})
-  (@tt{(SET Ra datum)} @roman{@tt{Ra} ← @tt{datum}@period})
+  (@tt{(SET Ra datum)} @roman{@tt{Ra} ← @tt{datum} (sign extended).})
   (@tt{(ADD Ra Rb Rc)} @roman{@tt{Ra} ← @tt{Rb+Rc}@period})
   (@tt{(SUB Ra Rb Rc)} @roman{@tt{Ra} ← @tt{Rb@tt{@larger{@larger{-}}}Rc}@period})
   (@tt{(MUL Ra Rb Rc)} @roman{@tt{Ra} ← @tt{Rb×Rc}@period})
