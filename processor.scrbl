@@ -341,7 +341,8 @@ At the start of execution @tt{@bold{SP}} is 2@↑{24}@tt{@larger{@larger{-}}}1.
  In a print of the executed instructions as indicated by parameter @nbr[print-registers?],
  each line begins with a line number.
  This number is right aligned in a field of @nbr[(align)] digits.
- Line numbers requiring more digits are not truncated.}
+ Line numbers requiring more digits are not truncated.
+ Procedures @nbr[print-memory] and @nbr[print-stack] align the addesses of the printed words.}
 
 @defparam[OUTPUT-port ‹port› output-port? #:value (current-output-port)]{
  Parameter specifying on which port instruction @tt{OUTPUT} prints its output.}
@@ -356,10 +357,12 @@ At the start of execution @tt{@bold{SP}} is 2@↑{24}@tt{@larger{@larger{-}}}1.
 @defproc[(print-memory (‹n› exact-nonnegative-integer? 1000)) void?]{
  Prints the first @nbr[‹n›] words of memory.
  Usually does not print the stack. (See @nbr[memory]).
- @nb{Does not} print words followed by zeros only.}
+ @nb{Does not} print words followed by zeros only.
+ Each word is preceded by its hexadecimal and @nbrl[align]{aligned} address.}
 
 @defproc[(print-stack (‹n› exact-nonnegative-integer?)) void?]{
  Shows the last @nbr[‹n›] words of memory, where the stack is located.
+ Each word is preceded by its hexadecimal and @nbrl[align]{aligned} address.
 
  @Interaction[
  (parameterize

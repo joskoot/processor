@@ -198,7 +198,10 @@
 
 (define (print-stack n)
   (for ((k (in-range (- A-mask n -1) (add1 A-mask))))
-    (printf "~s: ~a ~s~n" k (W-fmt-hex (vector-ref memory k)) (W-fmt-dec (vector-ref memory k)))))
+    (printf "~a: ~a ~s~n"
+      (string-upcase (~r #:base 16 #:min-width (align) k))
+      (W-fmt-hex (vector-ref memory k))
+      (W-fmt-dec (vector-ref memory k)))))
 
 (define (count-instrs)
   (let loop ((k A-mask))
