@@ -341,7 +341,7 @@
   (define-values (opcode cc ra rb rc dd) (decompose-instr (IR)))
   (when (print-instrs?)
     (printf "~a : ~a : ~s : ~a ~a ~a ~a ~a ~a : ~s~n"
-      (string-upcase (~r #:base 16 #:min-width (align) k))
+      (string-upcase (~r #:base 10 #:min-width (align) k))
       (A-fmt-hex last-addr)
       (mnemonic opcode cc)
       (string-upcase (~r #:base 16 #:min-width 2 #:pad-string "0" opcode))

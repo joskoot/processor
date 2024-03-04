@@ -146,7 +146,7 @@ Reading from and writing to memory cannot be done within the same clock cycle.
 
 @section[#:tag "sec-alu"]{Arithmetic unit}
 
-The arithmetic unit @tt{@bold{ALU}} has two word inputs: @tt{@bold{A1}} and @tt{@bold{A1}}@period
+The arithmetic unit @tt{@bold{ALU}} has two word inputs: @tt{@bold{A1}} and @tt{@bold{A2}}@period
 It has one word output @tt{@bold{AO}}@period
 The @tt{cc} field of the @tt{@bold{IR}} tells the @tt{@bold{ALU}}
 which arithmetic operation to perform. Arithmetic is done in two's complement.
@@ -192,7 +192,7 @@ Circuits are not clocked. They provide their outputs without waiting for clock-d
 
 @section{Busses}
 
-There are 13 busses, three switchable ones and ten fixed ones.
+There are 14 busses, three switchable ones and ten fixed ones.
 All of them can transfer a signal at the same time.
 The opcode in the @tt{@bold{IR}} controls which register or circuit output is connected
 to the entrance of a switchable bus and to which register or circuit input its exit is connected.
@@ -200,7 +200,7 @@ These switches are marked as ‘↑’.
 A fixed bus always has the same register or circuit output to its entrance and the same
 register or circuit input from its exit.
 Four of the fixed busses, marked by ‘f’, always are open.
-The other six, marked by ‘s’, are open during clock up period
+The other seven, marked by ‘s’, are open during clock up period
 but only when selected by the opcode.
 
 @Tabular[
@@ -217,7 +217,7 @@ but only when selected by the opcode.
   (@tt{@bold{AO}} "↑" "↑" " " " " " " " " " " " " " " " " " " " " " " " ")
   (@tt{@bold{MR}} "↑" "↑" " " " " " " " " " " " " " " " " " " " " "s" " ")
   (@tt{@bold{IR}} " " " " " " " " " " " " " " " " " " " " " " " " " " "f")
-  (@tt{@bold{DA}} " " " " " " " " " " " " " " " " " " " " " " "↑" " " " "))
+  (@tt{@bold{DA}} " " " " " " " " " " "s" " " " " " " " " " " "↑" " " " "))
  #:sep "│"
  #:column-properties '(center)
  #:row-properties '((top-border bottom-border) bottom-border)]
@@ -328,8 +328,7 @@ At the start of execution @tt{@bold{SP}} is 2@↑{24}@tt{@larger{@larger{-}}}1.
 @defparam*[print-instrs? ‹on/off› any/c boolean? #:value #t]{
  When this parameter is true, procedure @nbr[execute] prints all executed instructions:
  @inset{@tt{line-nr instr-address mnemonic opcode cc Ra Rb Rc datum cycle-count}}
- All elements are printed in hexadecimal form, the mnemonic and cycle-count excepted.
- The latter is printed in decimal notation.}
+ The elements are printed in hexadecimal form, the line-nr, mnemonic and cycle-count excepted.}
 
 @defparam*[print-registers? ‹on/off› any/c boolean? #:value #t]{
  When this parameter is true, procedure @nbr[execute] shows the contents
