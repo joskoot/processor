@@ -192,7 +192,7 @@ Circuits are not clocked. They provide their outputs without waiting for clock-d
 
 @section{Busses}
 
-There are 14 busses, three switchable ones and ten fixed ones.
+There are fourteen busses, three switchable ones and eleven fixed ones.
 All of them can transfer a signal at the same time.
 The opcode in the @tt{@bold{IR}} controls which register or circuit output is connected
 to the entrance of a switchable bus and to which register or circuit input its exit is connected.
