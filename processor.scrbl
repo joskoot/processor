@@ -199,8 +199,8 @@ to the entrance of a switchable bus and to which register or circuit input its e
 These switches are marked as ‘↑’.
 A fixed bus always has the same register or circuit output to its entrance and the same
 register or circuit input from its exit.
-Four of the fixed busses, marked by ‘f’, always are open.
-The other seven, marked by ‘s’, are open during clock up period
+Three of the fixed busses, marked by ‘f’, always are open.
+The other eight, marked by ‘s’, are open during clock up period
 but only when selected by the opcode.
 
 @Tabular[
@@ -212,12 +212,12 @@ but only when selected by the opcode.
   (@tt{@bold{SP}} "↑" "↑" "f" "f" " " " " "↑" "↑" "↑" "↑" "↑" "↑" " " " ")
   (@tt{@bold{S+}} " " "s" " " " " " " " " " " " " " " " " " " " " " " " ")
   (@tt{@bold{S-}} " " "s" " " " " " " " " " " " " " " " " " " "↑" " " " ")
-  (@tt{@bold{PC}} " " " " " " " " " " "f" " " " " " " " " " " "s" " " " ")
+  (@tt{@bold{PC}} " " " " " " " " " " "s" " " " " " " " " " " "s" " " " ")
   (@tt{@bold{P+}} " " " " " " " " "s" " " " " " " " " " " " " "s" " " " ")
   (@tt{@bold{AO}} "↑" "↑" " " " " " " " " " " " " " " " " " " " " " " " ")
   (@tt{@bold{MR}} "↑" "↑" " " " " " " " " " " " " " " " " " " " " "s" " ")
   (@tt{@bold{IR}} " " " " " " " " " " " " " " " " " " " " " " " " " " "f")
-  (@tt{@bold{DA}} " " " " " " " " " " "s" " " " " " " " " " " "↑" " " " "))
+  (@tt{@bold{DA}} "↑" " " " " " " " " "s" " " " " " " " " " " "↑" " " " "))
  #:sep "│"
  #:column-properties '(center)
  #:row-properties '((top-border bottom-border) bottom-border)]
