@@ -416,7 +416,10 @@
     ((#x0A) 'POP)
     ((#x0B) 'MRD)
     ((#x0C) 'MWR)
-    (else #f)))
+    (else
+      (error 'execute
+        "unknown opcode: #x~a"
+        (string-upcase (~r #:base 16 #:min-width 2 #:pad-string "0" opcode))))))
 
 (define (assembler instrs)
   (reset-memory)

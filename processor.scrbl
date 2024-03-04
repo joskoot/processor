@@ -192,14 +192,14 @@ Circuits are not clocked. They provide their outputs without waiting for clock-d
 
 @section{Busses}
 
-There are fourteen busses, three switchable ones and eleven fixed ones.
-All of them can transfer a signal at the same time.
+There are fifteen busses, three switchable ones and twelve fixed ones.
+They can transfer a signal during the same clock cycle.
 The opcode in the @tt{@bold{IR}} controls which register or circuit output is connected
 to the entrance of a switchable bus and to which register or circuit input its exit is connected.
 These switches are marked as ‘↑’.
 A fixed bus always has the same register or circuit output to its entrance and the same
 register or circuit input from its exit.
-Three of the fixed busses, marked by ‘f’, always are open.
+Four of the fixed busses, marked by ‘f’, always are open.
 The other eight, marked by ‘s’, are open during clock up period
 but only when selected by the opcode.
 
@@ -208,16 +208,16 @@ but only when selected by the opcode.
                @tt{@bold{P+}} @tt{@bold{A1}} @tt{@bold{A2}} @tt{@bold{C1}} @tt{@bold{C2}}
                @tt{@bold{MW}} @tt{@bold{MA}} @tt{@bold{IR}} @tt{@bold{DA}})
   @;              Rn  SP  S+  S-  PC  P+  A1  A2  C1  C2  MW  MA  IR  DA  
-  (@tt{@bold{Rn}} "↑" "↑" " " " " "↑" " " "↑" "↑" "↑" "↑" "↑" "↑" " " " ")
+  (@tt{@bold{Rn}} "↑" "↑" " " " " " " " " "↑" "↑" "↑" "↑" "↑" "↑" " " " ")
   (@tt{@bold{SP}} "↑" "↑" "f" "f" " " " " "↑" "↑" "↑" "↑" "↑" "↑" " " " ")
   (@tt{@bold{S+}} " " "s" " " " " " " " " " " " " " " " " " " " " " " " ")
-  (@tt{@bold{S-}} " " "s" " " " " " " " " " " " " " " " " " " "↑" " " " ")
+  (@tt{@bold{S-}} " " "s" " " " " " " " " " " " " " " " " " " "s" " " " ")
   (@tt{@bold{PC}} " " " " " " " " " " "s" " " " " " " " " " " "s" " " " ")
-  (@tt{@bold{P+}} " " " " " " " " "s" " " " " " " " " " " " " "s" " " " ")
+  (@tt{@bold{P+}} " " " " " " " " "f" " " " " " " " " " " " " " " " " " ")
   (@tt{@bold{AO}} "↑" "↑" " " " " " " " " " " " " " " " " " " " " " " " ")
   (@tt{@bold{MR}} "↑" "↑" " " " " " " " " " " " " " " " " " " " " "s" " ")
   (@tt{@bold{IR}} " " " " " " " " " " " " " " " " " " " " " " " " " " "f")
-  (@tt{@bold{DA}} "↑" " " " " " " " " "s" " " " " " " " " " " "↑" " " " "))
+  (@tt{@bold{DA}} "↑" " " " " " " " " "s" " " " " " " " " " " "s" " " " "))
  #:sep "│"
  #:column-properties '(center)
  #:row-properties '((top-border bottom-border) bottom-border)]
@@ -227,7 +227,7 @@ but a bus entrance can be connected to one output only at the same time.
 This means that in every column only one ‘↑’ or ‘s’ can be open at the same time.
 Because there are three switchable busses only, not more than three connections ‘↑’
 of the whole table can be selected at the same time.
-The ‘s’ busses to @tt{@bold{MA}} and @tt{@bold{MR}} → @tt{@bold{IR}}
+The ‘s’ busses to @tt{@bold{PC}} → @tt{@bold{MA}} and @tt{@bold{MR}} → @tt{@bold{IR}}
 make it possible to read the next instruction during the same clock cycle as the operation proper,
 provided the input of @tt{@bold{MA}} is not connected to the exit of another bus
 and the output of @tt{@bold{MR}} is not connected to the entrance of another bus,
@@ -442,7 +442,7 @@ At the start of execution @tt{@bold{SP}} is 2@↑{24}@tt{@larger{@larger{-}}}1.
 
 @subsection{Fibonacci}
 
-R0 : The number of elements to be computed and printed@(lb)
+R0 : The number of elements to be computed and printed, possibly a few more.@(lb)
 R1 : Fibonacci number, initially 0@(lb)
 R2 : Next fibonacci number, initially 1@(lb)
 R4 : 1 for decrementing R0
