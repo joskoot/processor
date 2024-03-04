@@ -227,8 +227,7 @@ but a bus entrance can be connected to one output only at the same time.
 This means that in every column only one ‘↑’ or ‘s’ can be open at the same time.
 Because there are three switchable busses only, not more than three connections ‘↑’
 of the whole table can be selected at the same time.
-The ‘s’ busses
-@inset{@tt{@bold{PC}} → @tt{@bold{MA}} and @tt{@bold{MR}} → @tt{@bold{IR}}}
+The ‘s’ busses to @tt{@bold{MA}} and @tt{@bold{MR}} → @tt{@bold{IR}}
 make it possible to read the next instruction during the same clock cycle as the operation proper,
 provided the input of @tt{@bold{MA}} is not connected to the exit of another bus
 and the output of @tt{@bold{MR}} is not connected to the entrance of another bus,
