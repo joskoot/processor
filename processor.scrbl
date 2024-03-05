@@ -262,7 +262,7 @@ Arithmetical operations are in two's complement.@(lb)Overflow is ignored.
   (@tt{(SET Ra datum)} @roman{@tt{Ra} ← @tt{datum} (sign extended).})
   (@tt{(ADD Ra Rb Rc)} @roman{@tt{Ra} ← @tt{Rb+Rc}@period})
   (@tt{(SUB Ra Rb Rc)} @roman{@tt{Ra} ← @tt{Rb@tt{@larger{@larger{-}}}Rc}@period})
-  (@tt{(MUL Ra Rb Rc)} @roman{@tt{Ra} ← @tt{Rb×Rc}@period})
+  (@tt{(MUL Ra Rb Rc)} @roman{@tt{Ra} ← @tt{Rb}×@tt{Rc}@period})
   (@tt{(DIV Ra Rb Rc)} @roman{@tt{Ra} ← @tt{Rb/Rc}, integer division@period})
   (@tt{(SHL Ra Rb Rc)} @roman{Put Rb into Ra, but left shifted by Rc bits.})
   (@tt{(SHR Ra Rb Rc)} @roman{Put Rb into Ra, but right shifted by Rc bits without sign extension.})
