@@ -6,7 +6,7 @@
 
 (execute '((SET R1 aap) (SET R2 20) (LT? R1 R2 aap) (SET R5 12345) (aap : ADD R3 R1 R2)))
 
-(execute '((SET R1 aap) (SET R2 20) (JMP aap) (LT? R1 R2 aap) (SET R5 12345) (aap : ADD R3 R1 R2)))
+(execute '((SET R1 aap) (SET R2 20) (JMP aap) (NOP) (SET R5 12345) (aap : ADD R3 R1 R2)))
 
 (printf "Factorial~n~n")
 

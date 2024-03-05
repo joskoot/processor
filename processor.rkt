@@ -1,5 +1,11 @@
 #lang racket/base
 
+#|════════════════════════════════════════════════════════════════════════════════════════════════════
+A simulator for a compiter processor
+
+See "processor.html" or  "processor.scrbl" for a description.
+════════════════════════════════════════════════════════════════════════════════════════════════════|#
+
 (provide
   assembler
   execute
@@ -89,7 +95,7 @@
         (else (set! out in) in)))))
 
 (define (make-W name) (W name (make-W-proc)))
-(define (make-A name) (A name (make-A-proc)))
+(define (make-A name) (A name (make-A-proc)))    
 (define opcode-size 8)
 (define r-size 4)
 (define cc-size 4)
@@ -109,10 +115,10 @@
 (define (decompose-instr instr)
   (values
     (AND #xFF (SHIFT instr -56))
-    (AND #xF (SHIFT instr -52))
-    (AND #xF (SHIFT instr -48))
-    (AND #xF (SHIFT instr -44))
-    (AND #xF (SHIFT instr -40))
+    (AND #xF  (SHIFT instr -52))
+    (AND #xF  (SHIFT instr -48))
+    (AND #xF  (SHIFT instr -44))
+    (AND #xF  (SHIFT instr -40))
     (D->W (AND instr D-mask))))
 
 (define IR (make-W 'IR))
@@ -130,6 +136,8 @@
 (define registers (list R0 R1 R2 R3 R4 R5 R6 SP))
 (define R-hash (hasheq 0 R0 1 R1 2 R2 3 R3 4 R4 5 R5 6 R6 7 SP 8 DA))
 (define (r->R r) (vector-ref R-vector r))
+(define instr-addr 0)
+(define (read-instr a) (set! instr-addr a) (memory-ref a))
 
 (define (reset-registers)
   (clock
@@ -142,8 +150,6 @@
     (R6 0)
     (SP A-mask)
     (PC 0)))
-
-(define last-addr 'yet-to-be-assigned)
 
 (define-syntax (clock stx)
   (syntax-case stx ()
@@ -161,13 +167,10 @@
 (define-syntax (clock+ stx)
   (syntax-case stx ()
     ((_ (R w) ...)
-     #'(begin
-         (set! last-addr (PC))
-         (clock (R w) ... (IR (memory-ref (PC))) (PC (add1 (PC))))))))
+     #'(clock (R w) ... (IR (read-instr (PC))) (PC (add1 (PC)))))))
 
 (define (next-instr)
-  (set! last-addr (PC))
-  (clock (IR (memory-ref(PC))) (PC (add1 (PC)))))
+  (clock (IR (read-instr (PC))) (PC (add1 (PC)))))
 
 (define memory 'yet-to-be-assigned)
 (define (reset-memory) (set! memory (make-vector (add1 A-mask))))
@@ -241,8 +244,7 @@
 
 (define (JMP ra)
   (define a ((r->R ra)))
-  (set! last-addr a)
-  (clock (IR (memory-ref a)) (PC (add1 a))))
+  (clock (IR (read-instr a)) (PC (add1 a))))
 
 (define (CMP cc ra rb rc)
   (define Ra (r->R ra))
@@ -252,8 +254,7 @@
     (((vector-ref CMP-vector cc)
       (W-sign-extend ((r->R ra)))
       (W-sign-extend ((r->R rb))))
-     (set! last-addr a)
-     (clock (IR (memory-ref a)) (PC (add1 a))))
+     (clock (IR (read-instr a)) (PC (add1 a))))
     (else (next-instr))))
 
 (define CMP-vector (vector = < > <= >=))
@@ -263,8 +264,7 @@
   (define a ((r->R rb)))
   (cond
     (((vector-ref IF-vector cc) (Ra))
-     (set! last-addr a)
-     (clock (IR (memory-ref a)) (PC (add1 a))))
+     (clock (IR (read-instr a)) (PC (add1 a))))
     (else (next-instr))))
 
 (define (=0? w) (zero? (W-sign-extend w)))
@@ -342,7 +342,7 @@
   (when (print-instrs?)
     (printf "~a : ~a : ~s : ~a ~a ~a ~a ~a ~a : ~s~n"
       (string-upcase (~r #:base 10 #:min-width (align) k))
-      (A-fmt-hex last-addr)
+      (A-fmt-hex instr-addr)
       (mnemonic opcode cc)
       (string-upcase (~r #:base 16 #:min-width 2 #:pad-string "0" opcode))
       (string-upcase (~r #:base 16 #:min-width 1 #:pad-string "0" cc))
