@@ -208,8 +208,8 @@ but only when selected by the opcode.
                @tt{@bold{P+}} @tt{@bold{A1}} @tt{@bold{A2}} @tt{@bold{C1}} @tt{@bold{C2}}
                @tt{@bold{MW}} @tt{@bold{MA}} @tt{@bold{IR}} @tt{@bold{DA}})
   @;              Rn  SP  S+  S-  PC  P+  A1  A2  C1  C2  MW  MA  IR  DA  
-  (@tt{@bold{Rn}} "↑" "↑" " " " " " " " " "↑" "↑" "↑" "↑" "↑" "↑" " " " ")
-  (@tt{@bold{SP}} "↑" "↑" "f" "f" " " " " "↑" "↑" "↑" "↑" "↑" "↑" " " " ")
+  (@tt{@bold{Rn}} "↑" "↑" " " " " " " "↑" "↑" "↑" "↑" "↑" "↑" "↑" " " " ")
+  (@tt{@bold{SP}} "↑" "↑" "f" "f" " " "↑" "↑" "↑" "↑" "↑" "↑" "↑" " " " ")
   (@tt{@bold{S+}} " " "s" " " " " " " " " " " " " " " " " " " " " " " " ")
   (@tt{@bold{S-}} " " "s" " " " " " " " " " " " " " " " " " " "s" " " " ")
   (@tt{@bold{PC}} " " " " " " " " " " "s" " " " " " " " " " " "s" " " " ")
@@ -217,7 +217,7 @@ but only when selected by the opcode.
   (@tt{@bold{AO}} "↑" "↑" " " " " " " " " " " " " " " " " " " " " " " " ")
   (@tt{@bold{MR}} "↑" "↑" " " " " " " " " " " " " " " " " " " " " "s" " ")
   (@tt{@bold{IR}} " " " " " " " " " " " " " " " " " " " " " " " " " " "f")
-  (@tt{@bold{DA}} "↑" " " " " " " " " "s" " " " " " " " " " " "s" " " " "))
+  (@tt{@bold{DA}} "↑" "↑" " " " " " " "s" " " " " " " " " " " "s" " " " "))
  #:sep "│"
  #:column-properties '(center)
  #:row-properties '((top-border bottom-border) bottom-border)]
@@ -227,13 +227,16 @@ but a bus entrance can be connected to one output only at the same time.
 This means that in every column only one ‘↑’ or ‘s’ can be open at the same time.
 Because there are three switchable busses only, not more than three connections ‘↑’
 of the whole table can be selected at the same time.
-The ‘s’ busses to @tt{@bold{PC}} → @tt{@bold{MA}} and @tt{@bold{MR}} → @tt{@bold{IR}}
+The ‘s’ busses to @tt{@bold{P+}} → @tt{@bold{MA}} and @tt{@bold{MR}} → @tt{@bold{IR}}
 make it possible to read the next instruction during the same clock cycle as the operation proper,
 provided the input of @tt{@bold{MA}} is not connected to the exit of another bus
 and the output of @tt{@bold{MR}} is not connected to the entrance of another bus,
 otherwise an additional cycle is needed to read the next instruction.
-The @tt{@bold{PC}} always to points to the memory word following the word
-from which the last instruction was read.
+@nb{A jump} is made by selecting a bus @tt{@bold{Rn}/@bold{DA}} → @tt{@bold{MA}}
+and @tt{@bold{MR}} → @tt{@bold{IR}}
+and adjusting the @tt{@bold{PC}} with bus @tt{@bold{Rn}/@bold{DA}} → @tt{@bold{P+}}.
+The f bus @tt{@bold{P+}} → @tt{@bold{PC}} assures that the @tt{@bold{PC}}
+always to points to the memory word following the word from which the last instruction was read.
 
 @section[#:tag "sec-assembler"]{Assembler}
 
