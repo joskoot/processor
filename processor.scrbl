@@ -15,8 +15,8 @@
 @title{A simulator of a computer processor}
 @author{Jacob J. A. Koot}
 
-@;@defmodule["processor.rkt" #:packages ()]
-@(defmodule processor/processor #:packages ())
+@defmodule["processor.rkt" #:packages ()]
+@;@(defmodule processor/processor #:packages ())
 
 @section{Introduction}
 
@@ -302,9 +302,11 @@ Arithmetical operations are in two's complement.@(lb)Overflow is ignored.
   (@tt{(PSH Ra)} @roman{Push @tt{Ra} onto the stack.})
   (@tt{(PSH datum)} @roman{Push @tt{datum} onto the stack.})
   (@tt{(POP Ra)} @roman{Pop a word from stack into @tt{Ra}@period})
-  (@tt{(OUT Ra)} @roman{Print @tt{Ra} (decimally and sign extended))})
-  (@tt{(OUT datum)} @roman{Print @tt{datum} (decimally and sign extended))})
+  (@tt{(OUT Ra)} @roman{Print @tt{Ra} on @nbr[OUTPUT-port].})
+  (@tt{(OUT datum)} @roman{Print @tt{datum} on @nbr[OUTPUT-port].)})
   (@tt{(INP Ra)} @roman{Reads a datum from @nbr[INPUT-port] and puts it in Ra.})
+  (@tt{(WRT Ra Rb)} @roman{Write to @nbr[OUTPUT-port] from memory at addresses from Ra to Rb.})
+  (@tt{(RÆD Ra Rb)} @roman{Read from @nbr[INPUT-port] into memory at addresses from Ra to Rb.})
   (@tt{(DATUM datum)} @roman{Datum not ment to be executed as instruction.})
   (@tt{(DATA datum ...+)} @roman{Expanded to repeated @tt{DATUM}@period})
   (@tt{(: @roman{comment} ...)} @roman{Ignored.}))
@@ -316,6 +318,8 @@ When pushing, address @tt{@bold{SP}} is used and @tt{@bold{SP}} is decreased by 
 When popping @tt{@bold{S+}} is used as address and @tt{@bold{SP}} is increased by one.
 At the start of execution @tt{@bold{SP}} is 2@↑{24}@tt{@larger{@larger{-}}}1.
 @tt{PSH} and @tt{POP} instructions should be balanced like parentheses.
+Instructions @tt{WRT} and @tt{RÆD} use direct access to memory.
+They take as many cycles as words read or written. 
                                                                  
 @section{Provided}
 
@@ -471,7 +475,7 @@ R4 : 1 for decrementing R0
      (execute)
      (display (get-output-string op))))]
 
-@subsection{A subroutine}
+@subsection{Subroutine call}
 
 Computes 2j+1 reading j from the @nbr[INPUT-port].
 
@@ -492,6 +496,18 @@ Computes 2j+1 reading j from the @nbr[INPUT-port].
        (MUL R6 R6 R2)
        (ADD R6 R6 R1)
        (PSH R6) (: return 2j+1)
-       (JMP R5) (: return))))]
+       (JMP R5) (: return))))
+ (print-stack 5)]
+
+@subsection{Self-modification}
+
+@Interaction[
+ (execute
+   '((MRD R1 aap)
+     (MWR R1 noot)
+     (NOP)
+     (noot : NOP)
+     (STP)
+     (aap : OUT R1)))]
 
 @larger{@bold{The end}}

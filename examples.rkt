@@ -77,4 +77,17 @@
 
 (print-memory 10)
 
+(parameterize ((INPUT-port (open-input-string "1 2 3 4 5")))
+  (execute
+    '((SET R1 10) (SET R2 5) (RÆD R1 R2) (NOP)))
+  (print-memory 20))
+
+(execute
+  '((MRD R1 aap)
+    (MWR R1 noot)
+    (NOP)
+    (noot : NOP)
+    (STP)
+    (aap : OUT R1)))
+
 ;═════════════════════════════════════════════════════════════════════════════════════════════════════

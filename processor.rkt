@@ -96,12 +96,6 @@ See "processor.html" or  "processor.scrbl" for a description.
 
 (define (make-W name) (W name (make-W-proc)))
 (define (make-A name) (A name (make-A-proc)))    
-(define opcode-size 8)
-(define r-size 4)
-(define cc-size 4)
-(define opcode-pos (- W-size opcode-size))
-(define cc-pos (- opcode-pos r-size))
-(define ra-pos (- cc-pos r-size))
 
 (define (compose-instr opcode cc ra rb rc d)
   (IOR
@@ -185,7 +179,7 @@ See "processor.html" or  "processor.scrbl" for a description.
   (vector-ref memory (AND A-mask a)))
 
 (define (print-memory (n (add1 A-mask)))
-  (for ((k (in-range (min (min n (add1 (count-instrs)))))))
+  (for ((k (in-range (min n (add1 (count-instrs))))))
     (printf "~a: ~a ~s~n"
       (string-upcase (~r #:base 16 #:min-width (align) k))
       (W-fmt-hex (vector-ref memory k))
@@ -317,6 +311,22 @@ See "processor.html" or  "processor.scrbl" for a description.
   (unless (natural? n) (raise-argument-error 'max-nr-of-instrs "natural?" n))
   n)
 
+(define (WRT ra rb)
+  (define from (AND A-mask ((r->R ra))))
+  (define to (AND A-mask (+ from ((r->R rb)))))
+  (for ((a (in-range from to)))
+    (define w (memory-ref a))
+    (fprintf (OUTPUT-port) "output : ~a : ~a : ~s~n"
+      (A-fmt-hex a) (W-fmt-hex w) w))
+  (next-instr))
+
+(define (RÆD ra rb)
+  (define from (AND A-mask ((r->R ra))))
+  (define to (AND A-mask (+ from ((r->R rb)))))
+  (for ((a (in-range from to)))
+    (memory-set! a (AND W-mask (read (INPUT-port)))))
+  (next-instr))
+
 (define print-registers? (make-parameter #t force-bool 'print-parameters?))
 (define print-program? (make-parameter #t force-bool 'print-program?))
 (define print-instrs? (make-parameter #t force-bool 'print-instrs?))
@@ -337,20 +347,41 @@ See "processor.html" or  "processor.scrbl" for a description.
 
 (define (reset) (reset-memory) (reset-registers))
 
+(define (print-instr k cycle-count . instr)
+  (cond
+    (cycle-count
+      (define-values (opcode cc ra rb rc dd) (apply values instr))
+      (printf "~a : ~a : ~s : ~a ~a ~a ~a ~a ~a : ~a~n"
+        (string-upcase (~r #:base 10 #:min-width (align) k))
+        (A-fmt-hex instr-addr)
+        (mnemonic opcode cc)
+        (string-upcase (~r #:base 16 #:min-width 2 #:pad-string "0" opcode))
+        (string-upcase (~r #:base 16 #:min-width 1 #:pad-string "0" cc))
+        (string-upcase (~r #:base 16 #:min-width 1 #:pad-string "0" ra))
+        (string-upcase (~r #:base 16 #:min-width 1 #:pad-string "0" rb))
+        (string-upcase (~r #:base 16 #:min-width 1 #:pad-string "0" rc))
+        (string-upcase (~r #:base 16 #:min-width 10 #:pad-string "0" dd))
+        cycle-count))
+    (else
+      (define-values (opcode cc ra rb rc dd) (decompose-instr (car instr)))
+      (printf "~a : ~s : ~a : ~a ~a ~a ~a ~a : ~s~n"
+        (string-upcase (~r #:base 10 #:min-width (align) k))
+        (mnemonic opcode cc)
+        (string-upcase (~r #:base 16 #:min-width 2 #:pad-string "0" opcode))
+        (string-upcase (~r #:base 16 #:min-width 1 #:pad-string "0" cc))
+        (string-upcase (~r #:base 16 #:min-width 1 #:pad-string "0" ra))
+        (string-upcase (~r #:base 16 #:min-width 1 #:pad-string "0" rb))
+        (string-upcase (~r #:base 16 #:min-width 1 #:pad-string "0" rc))
+        (string-upcase (~r #:base 16 #:min-width 10 #:pad-string "0" dd))
+        (W-fmt-dec (car instr))))))
+
+(define (print-program)
+  (for ((k (in-range (add1 (count-instrs)))))
+    (print-instr k #f (vector-ref memory k))))
+
 (define (executor k)
   (define-values (opcode cc ra rb rc dd) (decompose-instr (IR)))
-  (when (print-instrs?)
-    (printf "~a : ~a : ~s : ~a ~a ~a ~a ~a ~a : ~s~n"
-      (string-upcase (~r #:base 10 #:min-width (align) k))
-      (A-fmt-hex instr-addr)
-      (mnemonic opcode cc)
-      (string-upcase (~r #:base 16 #:min-width 2 #:pad-string "0" opcode))
-      (string-upcase (~r #:base 16 #:min-width 1 #:pad-string "0" cc))
-      (string-upcase (~r #:base 16 #:min-width 1 #:pad-string "0" ra))
-      (string-upcase (~r #:base 16 #:min-width 1 #:pad-string "0" rb))
-      (string-upcase (~r #:base 16 #:min-width 1 #:pad-string "0" rc))
-      (string-upcase (~r #:base 16 #:min-width 10 #:pad-string "0" dd))
-      cycle-count))
+  (when (print-instrs?) (print-instr k cycle-count opcode cc ra rb rc dd))
   (cond
     ((zero? opcode)
      (if (print-instrs?)
@@ -372,7 +403,9 @@ See "processor.html" or  "processor.scrbl" for a description.
         ((#x09) (PSH ra))
         ((#x0A) (POP ra))
         ((#x0B) (MRD ra rb))
-        ((#x0C) (MWR ra rb)))
+        ((#x0C) (MWR ra rb))
+        ((#x0D) (WRT ra rb))
+        ((#x0E) (RÆD ra rb)))
       (cond
         ((< k (max-nr-of-instrs)) (executor (add1 k)))
         (else (printf "Max nr of instrs exceeded~n"))))))
@@ -416,8 +449,10 @@ See "processor.html" or  "processor.scrbl" for a description.
     ((#x0A) 'POP)
     ((#x0B) 'MRD)
     ((#x0C) 'MWR)
-    (else
-      (error 'execute
+    ((#x0D) 'WRT)
+    ((#x0E) 'RÆD)
+    (else 'non
+     #; (error 'execute
         "unknown opcode: #x~a"
         (string-upcase (~r #:base 16 #:min-width 2 #:pad-string "0" opcode))))))
 
@@ -545,11 +580,15 @@ See "processor.html" or  "processor.scrbl" for a description.
              ((register? rb) (compose-instr 12 0 (register-nr ra) (register-nr rb) 0 0))
              ((INTEGER? rb) (compose-instr 12 0 (register-nr ra) 8 0 (AND D-mask rb)))
              (else (compose-instr 12 0 (register-nr ra) 8 0 (addr-ref rb)))))
-           
+          ((list 'WRT ra rb)
+           (compose-instr #xD 0 (register-nr ra) (register-nr rb) 0 0))
+          ((list 'RÆD ra rb)
+           (compose-instr #xE 0 (register-nr ra) (register-nr rb) 0 0))
+          
           (else (instr-error else))))
       (assemble-phase2 (add1 k) (cdr instrs))))
   
   (assemble-phase2 0 (assemble-phase1 0 instrs))
-  (when (print-program?) (printf "Program~n") (print-memory) (newline)))
+  (when (print-program?) (printf "Program~n") (print-program) (newline)))
 
 ;═════════════════════════════════════════════════════════════════════════════════════════════════════
