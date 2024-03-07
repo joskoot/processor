@@ -27,6 +27,10 @@ An instruction that does not access memory takes one clock cycle,
 the next instruction being read within the same cycle.
 When the instruction accesses memory,
 the next instruction is read during an additional cycle.
+Direct access input or output from or to a file takes as many cycles as words read or written
+plus an additional cycle to read the next instruction.
+In fact a program takes as many cycles as
+the number of words transferred from or to memory.
 
 @section{Definitions}
 
@@ -319,7 +323,8 @@ When popping @tt{@bold{S+}} is used as address and @tt{@bold{SP}} is increased b
 At the start of execution @tt{@bold{SP}} is 2@↑{24}@tt{@larger{@larger{-}}}1.
 @tt{PSH} and @tt{POP} instructions should be balanced like parentheses.
 Instructions @tt{WRT} and @tt{RÆD} use direct access to memory.
-They take as many cycles as words read or written. 
+They take as many cycles as words read or written
+plus an additional cycle to read the next instruction. 
                                                                  
 @section{Provided}
 
