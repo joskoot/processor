@@ -35,7 +35,8 @@ both those exchanged with the central processor unit and those exchanged with fi
 and the @seclink[
  "interactions-window"
  #:doc '(lib "scribblings/drracket/drracket.scrbl")]{interactions window}
-of @(DrRckt).
+of @(DrRckt) or whatever
+@hyperlink["https://en.wikipedia.org/wiki/Computer_monitor"]{monitor is used.}
 
 @section{Definitions}
 
