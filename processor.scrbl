@@ -198,7 +198,7 @@ Circuits are not clocked. They provide their outputs without waiting for clock-d
  #:sep (hspace 2)
  #:row-properties '((top-border bottom-border) ()()()()()()()() bottom-border)]
 
-@section{Busses}
+@section{Buses}
 
 There are fifteen buses, three switchable ones and twelve fixed ones.
 They can transfer a signal during the same clock cycle.
