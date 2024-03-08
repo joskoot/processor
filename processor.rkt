@@ -95,7 +95,12 @@ See "processor.html" or  "processor.scrbl" for a description.
         (else (set! out in) in)))))
 
 (define (make-W name) (W name (make-W-proc)))
-(define (make-A name) (A name (make-A-proc)))    
+(define (make-A name) (A name (make-A-proc)))
+
+; The opcode has 8 bits although presently never more than 4 bits are used.
+; Currently the maximum opcode is #x0E.
+; 8 bits for the opcode simplifies adding instructions
+; to the assembler and executor to be added in future.
 
 (define (compose-instr opcode cc ra rb rc d)
   (IOR
@@ -352,7 +357,7 @@ See "processor.html" or  "processor.scrbl" for a description.
     (cycle-count
       (define-values (opcode cc ra rb rc dd) (apply values instr))
       (printf "~a : ~a : ~s : ~a ~a ~a ~a ~a ~a : ~a~n"
-        (string-upcase (~r #:base 10 #:min-width (align) k))
+        (string-upcase (~r #:base 16 #:min-width (align) k))
         (A-fmt-hex instr-addr)
         (mnemonic opcode cc)
         (string-upcase (~r #:base 16 #:min-width 2 #:pad-string "0" opcode))

@@ -2,11 +2,9 @@
 @;════════════════════════════════════════════════════════════════════════════════════════════════════
 @(require
    "scribble-utensils.rkt"
-   scribble/core
-   scribble/eval
    racket
    "processor.rkt"
-   (for-syntax racket)
+   (for-syntax)
    (for-label racket "processor.rkt")
    (for-template "processor.rkt"))
 
@@ -33,10 +31,11 @@ In fact a program takes exactly as many cycles as
 the number of words transferred from or to memory,
 both those exchanged with the central processor unit and those exchanged with files
 and the @seclink[
- "interactions-window"
  #:doc '(lib "scribblings/drracket/drracket.scrbl")]{interactions window}
 of @(DrRckt) or whatever
-@hyperlink["https://en.wikipedia.org/wiki/Computer_monitor"]{monitor is used.}
+@seclink["https://en.wikipedia.org/wiki/Computer_monitor"]{monitor} is use for the
+@nbr[current-input-port] or the @nbr[current-output-port] or is used.
+No memory caches, memory banking or virtual memory is simulated.
 
 @section{Definitions}
 
@@ -68,7 +67,6 @@ In principle 24 can be increased to 40,
 but as the simulator keeps memory as a vector in RAM
 this makes the @nbr[assembler] and procedure @nbr[execute] use more words
 than available in your computer or acceptable for DrRacket or Racket.
-No memory caches, memory banking or virtual memory is simulated.
 Memory caches and banking would slow down the simulation.
 Virtual memory in a file would slow down too,
 but would allow a larger address space.
