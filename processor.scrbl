@@ -360,10 +360,10 @@ plus an additional cycle to read the next instruction.
  Procedures @nbr[print-memory] and @nbr[print-stack] align the addesses of the printed words.}
 
 @defparam[OUTPUT-port ‹port› output-port? #:value (current-output-port)]{
- Parameter specifying on which port instruction @tt{OUTPUT} prints its output.}
+ Parameter specifying on which port instructions @tt{WRT} and @tt{OUT} prints output.}
 
 @defparam[INPUT-port ‹port› output-port? #:value (current-input-port)]{
- Parameter specifying from which port instruction @tt{INPUT} reads its input.
+ Parameter specifying from which port instructions @tt{INP} and @tt{RÆD} read input.
  @Interaction[
  (parameterize
    ((INPUT-port (open-input-string "#xabcdef")))
