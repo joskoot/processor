@@ -34,7 +34,7 @@ both those exchanged with the central processor unit and those exchanged with fi
          #:doc '(lib "scribblings/drracket/drracket.scrbl")]{interactions window} of @(DrRckt)
 or whatever 
 @hyperlink["https://en.wikipedia.org/wiki/Computer_monitor"]{monitor} is used for the
-@nbr[current-input-port] and @nbr[current-output-port].
+@nbr[INPUT-port] and @nbr[OUTPUT-port].
 Memory caches, memory banking and virtual memory are not simulated.
 
 @section{Definitions}
@@ -510,7 +510,7 @@ Computes 2j+1 reading j from the @nbr[INPUT-port].
 
 @subsection{Self-modification}
 
-By means of instructiona @tt{MWR} and @tt{RÆD} a program can modify itself.
+By means of instructions @tt{MWR} and @tt{WRT} a program can modify itself.
 
 @Interaction[
  (execute
