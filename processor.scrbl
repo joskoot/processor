@@ -29,8 +29,13 @@ When the instruction accesses memory,
 the next instruction is read during an additional cycle.
 Direct access input or output from or to a file takes as many cycles as words read or written
 plus an additional cycle to read the next instruction.
-In fact a program takes as many cycles as
-the number of words transferred from or to memory.
+In fact a program takes exactly as many cycles as
+the number of words transferred from or to memory,
+both those exchanged with the central processor unit and those exchanged with files
+and the @seclink[
+ "interactions-window"
+ #:doc '(lib "scribblings/drracket/drracket.scrbl")]{interactions window}
+of @(DrRckt).
 
 @section{Definitions}
 
@@ -312,7 +317,7 @@ Arithmetical operations are in two's complement.@(lb)Overflow is ignored.
   (@tt{(WRT Ra Rb)} @roman{Write to @nbr[OUTPUT-port] from memory at addresses from Ra to Rb.})
   (@tt{(RÆD Ra Rb)} @roman{Read from @nbr[INPUT-port] into memory at addresses from Ra to Rb.})
   (@tt{(DATUM datum)} @roman{Datum not ment to be executed as instruction.})
-  (@tt{(DATA datum ...+)} @roman{Expanded to repeated @tt{DATUM}@period})
+  (@tt{(DATA datum ...)} @roman{Expanded to repeated @tt{DATUM}@period})
   (@tt{(: @roman{comment} ...)} @roman{Ignored.}))
  #:sep (hspace 2)
  #:row-properties '(bottom)]
