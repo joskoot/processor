@@ -510,6 +510,8 @@ Computes 2j+1 reading j from the @nbr[INPUT-port].
 
 @subsection{Self-modification}
 
+By means of instructiona @tt{MWR} and @tt{RÆD} a program can modify itself.
+
 @Interaction[
  (execute
    '((MRD R1 aap)
