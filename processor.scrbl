@@ -198,16 +198,16 @@ Circuits are not clocked. They provide their outputs without waiting for clock-d
  #:sep (hspace 2)
  #:row-properties '((top-border bottom-border) ()()()()()()()() bottom-border)]
 
-@section{Buses}
+@section{Busses}
 
-There are fifteen buses, three switchable ones and twelve fixed ones.
+There are fifteen busses, three switchable ones and twelve fixed ones.
 They can transfer a signal during the same clock cycle.
 The opcode in the @tt{@bold{IR}} controls which register or circuit output is connected
 to the entrance of a switchable bus and to which register or circuit input its exit is connected.
 These switches are marked as ‘↑’.
 A fixed bus always has the same register or circuit output to its entrance and the same
 register or circuit input from its exit.
-Four of the fixed buses, marked by ‘f’, always are open.
+Four of the fixed busses, marked by ‘f’, always are open.
 The other eight, marked by ‘s’, are open during clock up period
 but only when selected by the opcode.
 
@@ -233,14 +233,14 @@ but only when selected by the opcode.
 A bus exit can be connected to more than one input at the same time,
 but a bus entrance can be connected to one output only at the same time.
 This means that in every column only one ‘↑’ or ‘s’ can be open at the same time.
-Because there are three switchable buses only, not more than three connections ‘↑’
+Because there are three switchable busses only, not more than three connections ‘↑’
 of the whole table can be selected at the same time.
-The ‘s’ buses to @tt{@bold{P+}} → @tt{@bold{MA}} and @tt{@bold{MR}} → @tt{@bold{IR}}
+The ‘s’ busses to @tt{@bold{P+}} → @tt{@bold{MA}} and @tt{@bold{MR}} → @tt{@bold{IR}}
 make it possible to read the next instruction during the same clock cycle as the operation proper,
 provided the input of @tt{@bold{MA}} is not connected to the exit of another bus
 and the output of @tt{@bold{MR}} is not connected to the entrance of another bus,
 otherwise an additional cycle is needed to read the next instruction.
-@nb{A jump} is made by selecting the buses @tt{@bold{Rn}/@bold{DA}} → @tt{@bold{MA}}
+@nb{A jump} is made by selecting the busses @tt{@bold{Rn}/@bold{DA}} → @tt{@bold{MA}}
 and @tt{@bold{MR}} → @tt{@bold{IR}}
 and adjusting the @tt{@bold{PC}} with bus @tt{@bold{Rn}/@bold{DA}} → @tt{@bold{P+}}.
 The f bus @tt{@bold{P+}} → @tt{@bold{PC}} assures that the @tt{@bold{PC}}
