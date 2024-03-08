@@ -29,13 +29,13 @@ Direct access input or output from or to a file takes as many cycles as words re
 plus an additional cycle to read the next instruction.
 In fact a program takes exactly as many cycles as
 the number of words transferred from or to memory,
-both those exchanged with the central processor unit and those exchanged with files
-and the @seclink[
- #:doc '(lib "scribblings/drracket/drracket.scrbl")]{interactions window}
-of @(DrRckt) or whatever
-@seclink["https://en.wikipedia.org/wiki/Computer_monitor"]{monitor} is use for the
-@nbr[current-input-port] or the @nbr[current-output-port] or is used.
-No memory caches, memory banking or virtual memory is simulated.
+both those exchanged with the central processor unit and those exchanged with files and the
+@seclink["interactions-window"
+         #:doc '(lib "scribblings/drracket/drracket.scrbl")]{interactions window} of @(DrRckt)
+or whatever 
+@hyperlink["https://en.wikipedia.org/wiki/Computer_monitor"]{monitor} is used for the
+@nbr[current-input-port] and @nbr[current-output-port].
+Memory caches, memory banking and virtual memory are not simulated.
 
 @section{Definitions}
 
