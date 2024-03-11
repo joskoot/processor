@@ -25,7 +25,7 @@ An instruction that does not access memory takes one clock cycle,
 the next instruction being read within the same cycle.
 When the instruction accesses memory,
 the next instruction is read during an additional cycle.
-Direct access input or output from or to a file takes as many cycles as words read or written
+Input and output from or to a file takes as many cycles as words read or written
 plus an additional cycle to read the next instruction.
 In fact a program takes exactly as many cycles as
 the number of words transferred from or to memory,
@@ -34,7 +34,7 @@ both those exchanged with the central processor unit and those exchanged with fi
          #:doc '(lib "scribblings/drracket/drracket.scrbl")]{interactions window} of @(DrRckt)
 or whatever 
 @hyperlink["https://en.wikipedia.org/wiki/Computer_monitor"]{monitor} is used for the
-@nbr[INPUT-port] and @nbr[OUTPUT-port].
+@nbr[INP-port] and @nbr[OUT-port].
 Memory caches, memory banking and virtual memory are not simulated.
 
 @section{Definitions}
@@ -64,9 +64,10 @@ Memory caches, memory banking and virtual memory are not simulated.
 
 It would be nice to have a memory of more than 2@↑{24} words.
 In principle 24 can be increased to 40,
-but as the simulator keeps memory as a vector in RAM
-this makes the @nbr[assembler] and procedure @nbr[execute] use more words
-than available in your computer or acceptable for DrRacket or Racket.
+but as the simulator keeps memory in a vector
+this makes the @nbrl[assemble]{assembler} and procedure @nbr[execute] use more words
+than acceptable for DrRacket or Racket
+or available in your computer.
 Memory caches and banking would slow down the simulation.
 Virtual memory in a file would slow down too,
 but would allow a larger address space.
@@ -198,8 +199,10 @@ Circuits are not clocked. They provide their outputs without waiting for clock-d
  #:sep (hspace 2)
  #:row-properties '((top-border bottom-border) ()()()()()()()() bottom-border)]
 
-@section{Busses}
+@section[#:tag "sec-busses"]{Busses}
 
+Virtually, the simulated processor does nothing else than clocking buffers between
+registers, circuits, memory and the input and output controller.
 There are fifteen busses, three switchable ones and twelve fixed ones.
 They can transfer a signal during the same clock cycle.
 The opcode in the @tt{@bold{IR}} controls which register or circuit output is connected
@@ -310,11 +313,17 @@ Arithmetical operations are in two's complement.@(lb)Overflow is ignored.
   (@tt{(PSH Ra)} @roman{Push @tt{Ra} onto the stack.})
   (@tt{(PSH datum)} @roman{Push @tt{datum} onto the stack.})
   (@tt{(POP Ra)} @roman{Pop a word from stack into @tt{Ra}@period})
-  (@tt{(OUT Ra)} @roman{Print @tt{Ra} on @nbr[OUTPUT-port].})
-  (@tt{(OUT datum)} @roman{Print @tt{datum} on @nbr[OUTPUT-port].)})
-  (@tt{(INP Ra)} @roman{Reads a datum from @nbr[INPUT-port] and puts it in Ra.})
-  (@tt{(WRT Ra Rb)} @roman{Write to @nbr[OUTPUT-port] from memory at addresses from Ra to Rb.})
-  (@tt{(RÆD Ra Rb)} @roman{Read from @nbr[INPUT-port] into memory at addresses from Ra to Rb.})
+  (@tt{(OUT Ra)} @roman{Print @tt{Ra} on @nbr[OUT-port].})
+  (@tt{(OUT datum)} @roman{Print @tt{datum} on @nbr[OUT-port].)})
+  (@tt{(INP Ra)} @roman{Reads a datum from @nbr[INP-port] and puts it in Ra.})
+  (@tt{(WRT Ra Rb)}
+    @roman{Write to @nbr[OUT-port] from memory addresses from Ra to Ra+Rb})
+  (@tt{(WRT Ra datum)}
+    @roman{Write to @nbr[OUT-port] from memory addresses from Ra to Ra+datum})
+  (@tt{(RÆD Ra Rb)}
+    @roman{Read from @nbr[INP-port] to memory addresses from Ra to Ra+Rb})
+  (@tt{(RÆD Ra datum)}
+    @roman{Read from @nbr[INP-port] to memory addresses from Ra to Ra+datum})
   (@tt{(DATUM datum)} @roman{Datum not ment to be executed as instruction.})
   (@tt{(DATA datum ...)} @roman{Expanded to repeated @tt{DATUM}@period})
   (@tt{(: @roman{comment} ...)} @roman{Ignored.}))
@@ -332,41 +341,43 @@ plus an additional cycle to read the next instruction.
                                                                  
 @section{Provided}
 
-@defproc[(assembler (‹instrs› (listof instrs))) void?]{
- Assembles the instructions and puts them in memory starting from address 0.@(lb)
- Before assembling the memory is cleared.}
+@defproc[(assemble (‹instrs› (listof instrs))) void?]
+Assembles the instructions and puts them in memory starting from address 0.@(lb)
+Before assembling the memory is cleared.}
 
 @defproc[(execute (‹instrs› (listof instrs) #f)) void?]{ 
  Resets all registers and executes the program currently in memory starting at address 0.
- @nb{If @nbr[‹instr›]} is a list of instructions, the @nbr[assembler] is called first.}
+ @nb{If @nbr[‹instr›]} is a list of instructions, the @nbrl[assemble]{assembler} is called first.}
 
-@defparam*[print-instrs? ‹on/off› any/c boolean? #:value #t]{
+@defparam*[show-instructions ‹on/off› any/c boolean? #:value #t]{
  When this parameter is true, procedure @nbr[execute] prints all executed instructions:
  @inset{@tt{line-nr instr-address mnemonic opcode cc Ra Rb Rc datum cycle-count}}
  The elements are printed in hexadecimal form, the line-nr, mnemonic and cycle-count excepted.}
 
-@defparam*[print-registers? ‹on/off› any/c boolean? #:value #t]{
+@defparam*[show-registers ‹on/off› any/c boolean? #:value #t]{
  When this parameter is true, procedure @nbr[execute] shows the contents
  of  registers after completion of the program.}
 
-@defparam*[print-program? ‹on/off› any/c boolean? #:value #t]{
- When this parameter is true, the @nbr[assembler] shows the assembled program.}
+@defparam*[show-source-code ‹on/off› any/c boolean? #:value #t]{
+ When this parameter is true, the @nbrl[assemble]{assembler} shows the program to be assembled.}
+
+@defparam*[show-assembled-program ‹on/off› any/c boolean? #:value #t]{
+ When this parameter is true, the @nbrl[assemble]{assembler} shows the assembled program.}
 
 @defparam[align ‹n› exact-nonnegative-integer? #:value 3]{
- In a print of the executed instructions as indicated by parameter @nbr[print-registers?],
+ In a print of the executed instructions as indicated by parameter @nbr[show-registers],
  each line begins with a line number.
  This number is right aligned in a field of @nbr[(align)] digits.
- Line numbers requiring more digits are not truncated.
- Procedures @nbr[print-memory] and @nbr[print-stack] align the addesses of the printed words.}
+ Line numbers requiring more digits are not truncated.}
 
-@defparam[OUTPUT-port ‹port› output-port? #:value (current-output-port)]{
+@defparam[OUT-port ‹port› output-port? #:value (current-output-port)]{
  Parameter specifying on which port instructions @tt{WRT} and @tt{OUT} prints output.}
 
-@defparam[INPUT-port ‹port› output-port? #:value (current-input-port)]{
+@defparam[INP-port ‹port› output-port? #:value (current-input-port)]{
  Parameter specifying from which port instructions @tt{INP} and @tt{RÆD} read input.
  @Interaction[
  (parameterize
-   ((INPUT-port (open-input-string "#xabcdef")))
+   ((INP-port (open-input-string "#xabcdef")))
    (execute '((INP R1))))]}
 
 @defproc[(print-memory (‹n› exact-nonnegative-integer? 1000)) void?]{
@@ -381,9 +392,9 @@ plus an additional cycle to read the next instruction.
 
  @Interaction[
  (parameterize
-   ((print-registers? #f)
-    (print-program? #f)
-    (print-registers? #f))
+   ((show-assembled-program #f)
+    (show-source-code #f)
+    (show-registers #f))
    (execute
      '((PSH 1)
        (PSH 2)
@@ -403,18 +414,17 @@ plus an additional cycle to read the next instruction.
  @Interaction[
  (parameterize
    ((max-nr-of-instrs 5)
-    (print-registers? #f)
-    (print-program? #f)
-    (print-registers? #f))
+    (show-assembled-program #f)
+    (show-source-code #f)
+    (show-registers #f))
    (execute '((loop : JMP loop))))]}
 
 @defproc[(reset) void?]{
  Resets memory and registers.}
 
-@ignore{
- @defproc[#:id (R0 R0) (Rx (‹arg› (or/c #f exact-integer? 'clock))) exact-nonnegative-integer?]{
-  @nbr[Rx] is one of the following:
-  @inset{@deftogether[
+@defproc[#:id (R0 R0) (Rx (‹arg› (or/c #f exact-integer? 'clock))) exact-nonnegative-integer?]{
+ @nbr[Rx] is one of the following:
+ @inset{@deftogether[
  ((defidform #:kind "word register" R0)
   (defidform #:kind "word register" R1)
   (defidform #:kind "word register" R2)
@@ -422,38 +432,40 @@ plus an additional cycle to read the next instruction.
   (defidform #:kind "word register" R4)
   (defidform #:kind "word register" R5)
   (defidform #:kind "word register" R6)
-  (defidform #:kind "address register" SP))]}
+  (defidform #:kind "address register" SP)
+  (defidform #:kind "address register" PC)
+  (defidform #:kind "instruction register" IR))]}
 
-  When called with an integer, it stores the integer in its input without changing its output.
-  The integer is truncated to its 64 lower significant bits in case of a word.
-  When called with @nbr['clock], it copies its input to its output.
-  In all cases the output is returned.
-  Register @tt{@bold{Rx}} is printed as @tt{#<Rx:h...>} where each @tt{h} is an hexadecimal digit,
-  16 digits for a word and 6 digits for an address.
-  @Interaction[
- (R0 #xA)
- (R0)
- (R0 'clock)
- (R1 (R0))
- (R1)
- (R1 'clock)
- R1]}}
+ When called with an integer, it stores the integer in its input without changing its output.
+ The integer is truncated to its 64/24 lower significant bits in case of a word/address.
+ When called with @nbr['clock], it copies its input to its output.
+ In all cases the output is returned.
+ Register @tt{@bold{Rx}} is printed as @tt{#<Rx:h...>} where each @tt{h} is an hexadecimal digit,
+ 16 digits for a word and 6 digits for an address.
+ @Interaction[
+ (list (R0 #xA ) (R0) (R0 'clock) R0)
+ (list (R1 (R0)) (R1) (R1 'clock) R1)
+ (list (PC -1  ) (PC) (PC 'clock) PC)]}
 
 @section{Examples}
 
 @subsection{Factorial}
 
 @Interaction[
- (assembler
-   '((INP R0) (: the R0-th factorial will be computed)
-              (SET R1 1) (: the factorial is computed in R1)
-              (SET R2 1) (: R2 is constant 1)
-              (LE? R0 R2 end)
-              (loop : MUL R1 R0 R1)
-              (SUB R0 R0 R2)
-              (GT? R0 R2 loop)
-              (end : OUT R1)))
- (parameterize ((INPUT-port (open-input-string "5")))
+ (assemble
+   '((: the R0-th factorial will be computed)
+     (INP R0)
+     (: the factorial is computed in R1)
+     (SET R1 1)
+     (: R2 is constant 1)
+     (SET R2 1)
+     (: do the computation)
+     (LE? R0 R2 end)
+     (loop : MUL R1 R0 R1)
+     (SUB R0 R0 R2)
+     (GT? R0 R2 loop)
+     (end : OUT R1)))
+ (parameterize ((INP-port (open-input-string "5")))
    (execute))]
 
 @subsection{Fibonacci}
@@ -464,7 +476,7 @@ R2 : Next fibonacci number, initially 1@(lb)
 R4 : 1 for decrementing R0
 
 @Interaction[
- (assembler
+ (assemble
    '((SET R0 10)
      (SET R1 0)
      (SET R2 1)
@@ -480,16 +492,16 @@ R4 : 1 for decrementing R0
      (OUT R2)
      (STP)))
  (let ((op (open-output-string)))
-   (parameterize ((OUTPUT-port op))
+   (parameterize ((OUT-port op))
      (execute)
      (display (get-output-string op))))]
 
 @subsection{Subroutine call}
 
-Computes 2j+1 reading j from the @nbr[INPUT-port].
+Computes 2j+1 reading j from the @nbr[INP-port].
 
 @Interaction[
- (parameterize ((INPUT-port (open-input-string "3")))
+ (parameterize ((INP-port (open-input-string "3")))
    (execute
      '((INP R0)
        (PSH R0)
@@ -510,7 +522,9 @@ Computes 2j+1 reading j from the @nbr[INPUT-port].
 
 @subsection{Self-modification}
 
-By means of instructions @tt{MWR} and @tt{WRT} a program can modify itself.
+By means of instruction @tt{MWR} a program can modify itself.
+In the following example instruction @green{@tt{NOP}} at address @green{@tt{noot}}
+is replaced by instruction @green{@tt{OUT}} found at address @green{@tt{aap}}.
 
 @Interaction[
  (execute
