@@ -13,8 +13,8 @@
 @title{A simulator of a computer processor}
 @author{Jacob J. A. Koot}
 
-@defmodule["processor.rkt" #:packages ()]
-@;@(defmodule processor/processor #:packages ())
+@;@defmodule["processor.rkt" #:packages ()]
+@(defmodule processor/processor #:packages ())
 
 @section{Introduction}
 
