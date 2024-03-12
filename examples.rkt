@@ -2,6 +2,8 @@
 
 (require "processor.rkt")
 
+(catch-exn #f)
+
 (define (printl . args)
   (display "\n════════════════════════════════════════════════════════════════════")
   (apply printf args))
@@ -149,6 +151,8 @@
 
 (printl "~n")
 (execute '((SET R1 aap) (aap : DATA #x02021FFFFFFFFFFF aap)))
+
+(catch-exn #t)
 
 (printl "~n")
 (execute '((SET R1 aap) (aap : DATA #x03FFFFFFFFFFFFFF aap)))

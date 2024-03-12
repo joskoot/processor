@@ -13,8 +13,8 @@
 @title{A simulator of a computer processor}
 @author{Jacob J. A. Koot}
 
-@;@defmodule["processor.rkt" #:packages ()]
-@(defmodule processor/processor #:packages ())
+@defmodule["processor.rkt" #:packages ()]
+@;@(defmodule processor/processor #:packages ())
 
 @section{Introduction}
 
@@ -261,10 +261,11 @@ where @tt{address} is a symbol other than a register designator
 and all @tt{address}es must be distinct.
 Comments can be inserted as:
 @inset{@tt{(: @roman{text of the comment})}}
+This implies that a colon cannot be used as address.
 @nb{All elements} of an instruction must be separated by blank space.
 ‘@tt{datum}’ denotes a datum in the form of an exact integer or an @tt{address}@period
 If the datum is an exact integer it is truncated to its 40 lower significant bits.
-Arithmetical operations are in two's complement.@(lb)Overflow is ignored.
+Arithmetical operations are in two's complement. Overflow is ignored.
 
 @Tabular[
  ((@tt{(STP)} @roman{Halts the processor.})
