@@ -257,8 +257,8 @@ An instruction has the form
 @inset{@tt{(opcode-mnemonic etc ...)}}
 It may be given a name for its address by writing
 @inset{@nb{@tt{(addres : opcode-mnemonic etc ...)}}}
-where @tt{address} is a symbol other than a register designator
-and all @tt{address}es must be distinct.
+where @tt{addres} is a symbol other than a register designator
+and all @tt{addres}ses must be distinct.
 Comments can be inserted as:
 @inset{@tt{(: @roman{text of the comment})}}
 This implies that a colon cannot be used as address.
@@ -315,16 +315,16 @@ Arithmetical operations are in two's complement. Overflow is ignored.
   (@tt{(PSH datum)} @roman{Push @tt{datum} onto the stack.})
   (@tt{(POP Ra)} @roman{Pop a word from stack into @tt{Ra}@period})
   (@tt{(OUT Ra)} @roman{Print @tt{Ra} on @nbr[OUT-port].})
-  (@tt{(OUT datum)} @roman{Print @tt{datum} on @nbr[OUT-port].)})
+  (@tt{(OUT datum)} @roman{Print @tt{datum} on @nbr[OUT-port].})
   (@tt{(INP Ra)} @roman{Reads a datum from @nbr[INP-port] and puts it in Ra.})
   (@tt{(WRT Ra Rb)}
-    @roman{Write to @nbr[OUT-port] from memory addresses from Ra to Ra+Rb})
+    @roman{Write words from memory at addresses from Ra to Ra+Rb})
   (@tt{(WRT Ra datum)}
-    @roman{Write to @nbr[OUT-port] from memory addresses from Ra to Ra+datum})
+    @roman{Write words from memory at addresses from Ra to Ra+datum})
   (@tt{(RÆD Ra Rb)}
-    @roman{Read from @nbr[INP-port] to memory addresses from Ra to Ra+Rb})
+    @roman{Read words into memory at addresses from Ra to Ra+Rb})
   (@tt{(RÆD Ra datum)}
-    @roman{Read from @nbr[INP-port] to memory addresses from Ra to Ra+datum})
+    @roman{Read words into memory at addresses from Ra to Ra+datum})
   (@tt{(DATUM datum)} @roman{Datum not ment to be executed as instruction.})
   (@tt{(DATA datum ...)} @roman{Expanded to repeated @tt{DATUM}@period})
   (@tt{(: @roman{comment} ...)} @roman{Ignored.}))
@@ -445,8 +445,7 @@ Before assembling the memory is cleared.}
  16 digits for a word and 6 digits for an address.
  @Interaction[
  (list (R0 #xA ) (R0) (R0 'clock) R0)
- (list (R1 (R0)) (R1) (R1 'clock) R1)
- (list (PC -1  ) (PC) (PC 'clock) PC)]}
+ (list (R1 (R0)) (R1) (R1 'clock) R1)]}
 
 @section{Examples}
 
@@ -478,7 +477,7 @@ R4 : 1 for decrementing R0
 
 @Interaction[
  (assemble
-   '((SET R0 10)
+   '((SET R0 7)
      (SET R1 0)
      (SET R2 1)
      (SET R4 1)
@@ -517,8 +516,7 @@ Computes 2j+1 reading j from the @nbr[INP-port].
        (SET R2 2)
        (MUL R6 R6 R2)
        (ADD R6 R6 R1)
-       (PSH R6) (: return 2j+1)
-       (JMP R5) (: return))))
+       (PSH R6) (JMP R5) (: return 2j+1))))
  (print-stack 5)]
 
 @subsection{Self-modification}

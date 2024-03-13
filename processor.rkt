@@ -51,9 +51,9 @@
       (IOR w W-sign-extension)
       w)))
   
-(struct E (name proc) #:property prop:object-name 0 #:property prop:procedure 1)
 (define (W-printer o p m) (fprintf p "#<~s:~a>" (E-name o) (W-fmt-hex ((E-proc o)))))
 (define (A-printer o p m) (fprintf p "#<~s:~a>" (E-name o) (A-fmt-hex ((E-proc o)))))
+(struct E (name proc) #:property prop:object-name 0 #:property prop:procedure 1)
 (struct W E () #:property prop:custom-write W-printer)
 (struct A E () #:property prop:custom-write A-printer)
 
@@ -190,13 +190,13 @@
     (#x3 #x9 NEG ,(λ (x (y 0)) (- (W-sign-extend x))))
     (#x3 #xA NOT ,(λ (x (y 0)) (NOT x)))
     (#x4 #x0 EQ? ,(λ (x (y 0)) (= (x) (y))))
-    (#x4 #x1 LT? ,(λ (x (y 0)) (< (W-sign-extend x) (W-sign-extend y))))
-    (#x4 #x2 GT? ,(λ (x (y 0)) (> (W-sign-extend x) (W-sign-extend y))))
+    (#x4 #x1 LT? ,(λ (x (y 0)) (<  (W-sign-extend x) (W-sign-extend y))))
+    (#x4 #x2 GT? ,(λ (x (y 0)) (>  (W-sign-extend x) (W-sign-extend y))))
     (#x4 #x3 LE? ,(λ (x (y 0)) (<= (W-sign-extend x) (W-sign-extend y))))
     (#x4 #x4 GE? ,(λ (x (y 0)) (>= (W-sign-extend x) (W-sign-extend y))))
     (#x5 #x0 =0? ,zero?)
-    (#x5 #x1 <0? ,(λ (x (y 0)) (< (W-sign-extend x) 0)))
-    (#x5 #x2 >0? ,(λ (x (y 0)) (> (W-sign-extend x) 0)))
+    (#x5 #x1 <0? ,(λ (x (y 0)) (<  (W-sign-extend x) 0)))
+    (#x5 #x2 >0? ,(λ (x (y 0)) (>  (W-sign-extend x) 0)))
     (#x5 #x3 ≤0? ,(λ (x (y 0)) (<= (W-sign-extend x) 0)))
     (#x5 #x4 ≥0? ,(λ (x (y 0)) (>= (W-sign-extend x) 0)))             
     (#x6 #f  JMP #f)
@@ -242,7 +242,7 @@
 
 (define (next-instr) (clock+))
 
-; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;═════════════════════════════════════════════════════════════════════════════════════════════════════
 
 (define (execute (program #f))
   (define-syntax-rule (catch-exn:fail expr ...)
@@ -350,7 +350,7 @@
   (when (show-instructions) (printf " ~nExecuting~n"))
   (if (catch-exn) (catch-exn:fail (executor 0)) (executor 0)))
 
-; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;═════════════════════════════════════════════════════════════════════════════════════════════════════
 
 (define (assemble program)
   
