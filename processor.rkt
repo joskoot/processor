@@ -20,8 +20,7 @@
 (define IOR bitwise-ior)
 (define NOT bitwise-not)
 (define SHIFT arithmetic-shift)
-(define-syntax-rule (~R x ...) (string-upcase (~r x ...)))
-(define (~h n width) (~R n #:base 16 #:min-width width #:pad-string "0"))
+(define (~h n width) (string-upcase (~r n #:base 16 #:min-width width #:pad-string "0")))
 (define (force-bool x) (and x #t))
 (define W-size 64) ; words
 (define A-size 24) ; addresses (have no sign, never negative)
@@ -244,7 +243,7 @@
 
 ;═════════════════════════════════════════════════════════════════════════════════════════════════════
 
-(define (execute (program #f))
+(define (execute (source-code #f))
   (define-syntax-rule (catch-exn:fail expr ...)
     (with-handlers ((exn:fail? (λ (exn) (displayln (exn-message exn) (current-error-port)))))
       (begin expr ...)))
@@ -343,7 +342,7 @@
           ((>= k (max-nr-of-instrs)) (printf "Max nr of instructions exceeded : max=~s~n" k))
           (else (executor (add1 k)))))))
   
-  (when program (assemble program))
+  (when source-code (assemble source-code))
   (set! cycle-count 0)
   (reset-registers)
   (next-instr)
@@ -352,16 +351,16 @@
 
 ;═════════════════════════════════════════════════════════════════════════════════════════════════════
 
-(define (assemble program)
+(define (assemble source-code)
   
-  (unless (and (list? program) (andmap list? program))
-    (raise-argument-error 'assemble "listof instr" program))
+  (unless (and (list? source-code) (andmap list? source-code))
+    (raise-argument-error 'assemble "listof instr" source-code))
   
   (when (show-source-code)
     (printf " ~nSource code~n")
-    (for ((instr (in-list program))) (printf "~s~n" instr)))
+    (for ((instr (in-list source-code))) (printf "~s~n" instr)))
   
-  (define registers '(R0 R1 R2 R3 R4 R5 R6 SP))
+  (define registers '(R0 R1 R2 R3 R4 R5 R6 #;SP))
   (define R-hash (for/hasheq ((R (in-list registers)) (k (in-naturals))) (values R k)))
   (define (R->r R) (hash-ref R-hash R))
   (define addr-hash (make-hasheq))
@@ -386,32 +385,31 @@
       ((symbol? datum) (hash-ref addr-hash datum))
       (else (D->W datum))))
   
-  (define (assemble-phase1 k program)
-    (define (instr-error instr) (error 'assembler "incorrect instruction: ~s" instr)) 
+  (define (assemble-phase1 k source-code)
     (cond
-      ((null? program) '())
+      ((null? source-code) '())
       (else
-        (define instr (car program))
+        (define instr (car source-code))
         (match instr
-          ((list ': rest ...) (assemble-phase1 k (cdr program)))
+          ((list ': rest ...) (assemble-phase1 k (cdr source-code)))
           ((list addr ': 'DATA data ...)
            (set-addr! addr k)
            (append (map make-DATUM-instr data)
-             (assemble-phase1 (+ k (length data)) (cdr program))))
+             (assemble-phase1 (+ k (length data)) (cdr source-code))))
           ((list 'DATA data ...)
            (unless (for-each check-datum data)
              (error 'assemble "incorrect DATA: ~s" data))
            (append (map make-DATUM-instr data)
-             (assemble-phase1 (+ k (length data)) (cdr program))))
+             (assemble-phase1 (+ k (length data)) (cdr source-code))))
           ((list addr ': rest ...)
            (set-addr! addr k)
-           (cons rest (assemble-phase1 (add1 k) (cdr program))))
+           (cons rest (assemble-phase1 (add1 k) (cdr source-code))))
           ((list rest ...)
-           (cons rest (assemble-phase1 (add1 k) (cdr program))))))))
+           (cons rest (assemble-phase1 (add1 k) (cdr source-code))))))))
   
-  (define (assemble-phase2 k program)
+  (define (assemble-phase2 k source-code)
     (when (show-assembled-program) (printf " ~nAssembled program~n"))
-    (for ((instr (in-list program)) (k (in-naturals)))
+    (for ((instr (in-list source-code)) (k (in-naturals)))
       (define i (assemble-instr instr))
       (vector-set! memory k i)
       (when (show-assembled-program)
@@ -438,7 +436,7 @@
           (compose-instr opcode cc (R->r Ra) (R->r Rb) (R->r Rc) 0))
         (else
           (check-R Ra) (check-R Rb)
-          (compose-instr opcode cc (R->r Ra) 0 (R->r Rb) 0))))
+          (compose-instr opcode cc (R->r Ra) (R->r Rb) 0 0))))
     (define (compose-CMP-instr Ra Rb Rc)
       (check-R Ra) (check-R Rb)
       (if (R? Rc)
@@ -521,7 +519,7 @@
       (else (instr-error))))
   
   (reset-memory)
-  (assemble-phase2 0 (assemble-phase1 0 program)))
+  (assemble-phase2 0 (assemble-phase1 0 source-code)))
 
 ;═════════════════════════════════════════════════════════════════════════════════════════════════════
 #|

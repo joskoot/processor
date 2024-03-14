@@ -1,5 +1,7 @@
 #lang scribble/manual
+
 @;════════════════════════════════════════════════════════════════════════════════════════════════════
+
 @(require
    "scribble-utensils.rkt"
    racket
@@ -13,8 +15,8 @@
 @title{A simulator of a computer processor}
 @author{Jacob J. A. Koot}
 
-@;@defmodule["processor.rkt" #:packages ()]
-@(defmodule processor/processor #:packages ())
+@defmodule["processor.rkt" #:packages ()]
+@;@(defmodule processor/processor #:packages ())
 
 @section{Introduction}
 
@@ -107,14 +109,15 @@ and the comparing circuit @nbsl["sec-cmp"]{@tt{@bold{CMP}}}@period
   (@tt{@bold{R4}} "word"    "general purpose"      "yes")
   (@tt{@bold{R5}} "word"    "general purpose"      "yes")
   (@tt{@bold{R6}} "word"    "general purpose"      "yes")
+  (@tt{@bold{R6}} "word"    "general purpose"      "yes")
   (@tt{@bold{SP}} "address" "stack pointer"        "yes")
   (@tt{@bold{PC}} "address" "program counter"      "no")
   (@tt{@bold{IR}} "word"    "instruction register" "no"))
  #:sep (hspace 2)
- #:row-properties '((top-border bottom-border) ()()()()()()()()() bottom-border)]
+ #:row-properties '((top-border bottom-border) ()()()()()()()()()() bottom-border)]
 
 Register designators can appear explicitly in assembler code.
-@tt{@bold{PC}} and @tt{@bold{IR}} are used implicitly
+@tt{@bold{SP}}, @tt{@bold{PC}} and @tt{@bold{IR}} are used implicitly
 depending on the operation code in the @tt{@bold{IR}}@period
 When a datum is transferred to a word register it is sign extended.
 When a datum is used as an address it is truncated to its 24 lower significant bits.
@@ -183,7 +186,7 @@ Circuits are not clocked. They provide their outputs without waiting for clock-d
   (@tt{@bold{S+}} "address" "output"
     @roman{@tt{@bold{SP}}+1 modulo 2@↑{24}})
   (@tt{@bold{S-}} "address" "output"
-    @roman{@tt{@bold{SP}}@tt{@larger{@larger{-}}}1 modulo 2@↑{24}})
+    @roman{@tt{@bold{SP}}@tt{-}1 modulo 2@↑{24}})
   (@tt{@bold{DA}} "word" "output"
     @roman{the sign extended datum part of the @tt{@bold{IR}}})
   (@tt{@bold{A1}} "word" "input"
@@ -273,13 +276,13 @@ Arithmetical operations are in two's complement. Overflow is ignored.
   (@tt{(SET Ra Rb)} @roman{@tt{Ra} ← @tt{Rb}@period})
   (@tt{(SET Ra datum)} @roman{@tt{Ra} ← @tt{datum} (sign extended).})
   (@tt{(ADD Ra Rb Rc)} @roman{@tt{Ra} ← @tt{Rb+Rc}@period})
-  (@tt{(SUB Ra Rb Rc)} @roman{@tt{Ra} ← @tt{Rb@tt{@larger{@larger{-}}}Rc}@period})
+  (@tt{(SUB Ra Rb Rc)} @roman{@tt{Ra} ← @tt{Rb-}Rc@period})
   (@tt{(MUL Ra Rb Rc)} @roman{@tt{Ra} ← @tt{Rb}×@tt{Rc}@period})
   (@tt{(DIV Ra Rb Rc)} @roman{@tt{Ra} ← @tt{Rb/Rc}, integer division@period})
   (@tt{(SHL Ra Rb Rc)} @roman{Put Rb into Ra, but left shifted by Rc bits.})
   (@tt{(SHR Ra Rb Rc)} @roman{Put Rb into Ra, but right shifted by Rc bits without sign extension.})
   (@tt{(SHE Ra Rb Rc)} @roman{Put Rb into Ra, but right shifted by Rc bits and sign extended.})
-  (@tt{(NEG Ra Rb)} @roman{@tt{Ra} ← @tt{@larger{@larger{-}}Rb}@period})
+  (@tt{(NEG Ra Rb)} @roman{@tt{Ra} ← @tt{-Rb}@period})
   (@tt{(AND Ra Rb Rc)} @roman{@tt{Ra} ← @tt{Rb˄Rc}, bitwise and.})
   (@tt{(IOR Ra Rb Rc)} @roman{@tt{Ra} ← @tt{Rb˅Rc}, bitwise inclusive or.})
   (@tt{(NOT Ra Rb)} @roman{@tt{Ra} ← @tt{@roman{¬}Rb}, bitwise not.})
@@ -334,7 +337,7 @@ Arithmetical operations are in two's complement. Overflow is ignored.
 The @tt{PSH} and @tt{POP} instructions use the @tt{@bold{SP}} for addressing.
 When pushing, address @tt{@bold{SP}} is used and @tt{@bold{SP}} is decreased by one.
 When popping @tt{@bold{S+}} is used as address and @tt{@bold{SP}} is increased by one.
-At the start of execution @tt{@bold{SP}} is 2@↑{24}@tt{@larger{@larger{-}}}1.
+At the start of execution @tt{@bold{SP}} is 2@↑{24}@tt{-}1.
 @tt{PSH} and @tt{POP} instructions should be balanced like parentheses.
 Instructions @tt{WRT} and @tt{RÆD} use direct access to memory.
 They take as many cycles as words read or written
@@ -366,7 +369,7 @@ Before assembling the memory is cleared.}
  When this parameter is true, the @nbrl[assemble]{assembler} shows the assembled program.}
 
 @defparam[align ‹n› exact-nonnegative-integer? #:value 3]{
- In a print of the executed instructions as indicated by parameter @nbr[show-registers],
+ In a print of the executed instructions as indicated by parameter @nbr[show-instructions],
  each line begins with a line number.
  This number is right aligned in a field of @nbr[(align)] digits.
  Line numbers requiring more digits are not truncated.}
@@ -378,8 +381,8 @@ Before assembling the memory is cleared.}
  Parameter specifying from which port instructions @tt{INP} and @tt{RÆD} read input.
  @Interaction[
  (parameterize
-   ((INP-port (open-input-string "#xabcdef")))
-   (execute '((INP R1))))]}
+   ((INP-port (open-input-string "#x0123456789abcdef")))
+   (execute '((INP R0) (NEG R1 R0))))]}
 
 @defproc[(print-memory (‹n› exact-nonnegative-integer? 1000)) void?]{
  Prints the first @nbr[‹n›] words of memory.
@@ -423,8 +426,10 @@ Before assembling the memory is cleared.}
 @defproc[(reset) void?]{
  Resets memory and registers.}
 
-@defproc[#:id (R0 R0) (Rx (‹arg› (or/c #f exact-integer? 'clock))) exact-nonnegative-integer?]{
- @nbr[Rx] is one of the following:
+@Elemtag{Rx}
+@defproc[#:link-target? #f (Rx (‹arg› (or/c #f exact-integer? 'clock) #f))
+         exact-nonnegative-integer?]{
+ @nbpr{Rx} is one of the following:
  @inset{@deftogether[
  ((defidform #:kind "word register" R0)
   (defidform #:kind "word register" R1)
@@ -477,7 +482,7 @@ R4 : 1 for decrementing R0
 
 @Interaction[
  (assemble
-   '((SET R0 7)
+   '((SET R0 10)
      (SET R1 0)
      (SET R2 1)
      (SET R4 1)
