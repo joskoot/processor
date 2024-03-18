@@ -15,29 +15,28 @@
 @title{A simulator of a computer processor}
 @author{Jacob J. A. Koot}
 
-@;@defmodule["processor.rkt" #:packages ()]
-@(defmodule processor/processor #:packages ())
+@defmodule["processor.rkt" #:packages ()]
+@;@(defmodule processor/processor #:packages ())
 
 @section{Introduction}
 
-The simulator described in the present document executes a program
+The simulator described in the present document executes a binary coded program
 that can be made with its @nbsl["sec-assembler"]{assembler}@period
 Every instruction consists of one word.
 An instruction that does not access memory takes one clock cycle,
 the next instruction being read within the same cycle.
 When the instruction accesses memory,
 the next instruction is read during an additional cycle.
-Input and output from or to a file takes as many cycles as words read or written
+Input and output from or to a port takes as many cycles as words read or written
 plus an additional cycle to read the next instruction.
 In fact a program takes exactly as many cycles as
-the number of words transferred from or to memory,
-both those exchanged with the central processor unit and those exchanged with files and the
-@seclink["interactions-window"
-         #:doc '(lib "scribblings/drracket/drracket.scrbl")]{interactions window} of @(DrRckt)
-or whatever 
-@hyperlink["https://en.wikipedia.org/wiki/Computer_monitor"]{monitor} is used for the
-@nbr[INP-port] and @nbr[OUT-port].
+the number of words transferred from or to memory.
 Memory caches, memory banking and virtual memory are not simulated.
+
+@Tabular[
+ (("Notation" " ")
+  ("n..m" ": from n up to but not including m.")
+  ("n to m" ": from n up to and including m."))]
 
 @section{Definitions}
 
@@ -78,7 +77,6 @@ but would allow a larger address space.
 
 Instruction register @tt{@bold{IR}} contains a word in which the following components are discerned.
 Bits are counted from low to high significance starting from 0.
-n..m means from n up to but not including m.
 The length of every component is a multiple of 4, even when less bits are required.
 This makes reading hexadecimally printed instructions easier. 
 
@@ -101,29 +99,17 @@ and the comparing circuit @nbsl["sec-cmp"]{@tt{@bold{CMP}}}@period
 @section[#:tag "sec-registers"]{Registers}
 
 @Tabular[
- (("name"         "size"    "usage"                "register designator?")
-  (@tt{@bold{R0}} "word"    "general purpose"      "yes")
-  (@tt{@bold{R1}} "word"    "general purpose"      "yes")
-  (@tt{@bold{R2}} "word"    "general purpose"      "yes")
-  (@tt{@bold{R3}} "word"    "general purpose"      "yes")
-  (@tt{@bold{R4}} "word"    "general purpose"      "yes")
-  (@tt{@bold{R5}} "word"    "general purpose"      "yes")
-  (@tt{@bold{R6}} "word"    "general purpose"      "yes")
-  (@tt{@bold{R6}} "word"    "general purpose"      "yes")
-  (@tt{@bold{SP}} "address" "stack pointer"        "yes")
-  (@tt{@bold{PC}} "address" "program counter"      "no")
-  (@tt{@bold{IR}} "word"    "instruction register" "no"))
+ (("name" "size" "usage" "register designator?" "initial value")
+  (@roman{@tt{@bold{R0}} to @tt{@bold{R7}}} "word" "general purpose" "yes" "0")
+  (@tt{@bold{SP}} "address" "stack pointer"        "no" @roman{2@↑{24}−1})
+  (@tt{@bold{PC}} "address" "program counter"      "no" "0")
+  (@tt{@bold{IR}} "word"    "instruction register" "no" "na"))
  #:sep (hspace 2)
- #:row-properties '((top-border bottom-border) ()()()()()()()()()() bottom-border)]
+ #:row-properties '((top-border bottom-border) ()()() bottom-border)]
 
 Register designators can appear explicitly in assembler code.
 @tt{@bold{SP}}, @tt{@bold{PC}} and @tt{@bold{IR}} are used implicitly
 depending on the operation code in the @tt{@bold{IR}}@period
-When a datum is transferred to a word register it is sign extended.
-When a datum is used as an address it is truncated to its 24 lower significant bits.
-When a word is transferred to an address register it is truncated to its 24 lower significant bits.
-When an address is transferred to a word-register it is extended with zero bits
-at the high significant end.
 
 @section{Clock}
 The simulator has a virtual clock.
@@ -131,10 +117,12 @@ Virtually registers and circuits run simultaneously.
 Registers are clocked.
 At clock raise they accept their inputs without altering their outputs.
 At clock drop they transfer their inputs to their outputs.
-An instruction is executed by first calling the involved registers for clock raise
-and subsequently calling these registers for clock drop.
-All other elements than registers start at clock raise time and set their outputs before clock drop.
-At clock drop they do nothing.
+An instruction is executed by first triggering the involved registers for clock raise
+and subsequently triggering them for clock drop.
+Memory, when activated, starts reading or writing at clock-raise
+and finishes reading before clock-drop and writing within the clock-cycle.
+Other elements are not clocked.
+When their inputs change the possible mutation of their outputs is effectuated within clock-up time.
 
 @section[#:tag "sec-memory"]{Memory}
 
@@ -162,7 +150,7 @@ The arithmetic unit @tt{@bold{ALU}} has two word inputs: @tt{@bold{A1}} and @tt{
 It has one word output @tt{@bold{AO}}@period
 The @tt{cc} field of the @tt{@bold{IR}} tells the @tt{@bold{ALU}}
 which arithmetic operation to perform. Arithmetic is done in two's complement.
-Overflow is ignored.
+Overflow is ignored. Arithmetic instructions take one clock-cycle.
 
 @section[#:tag "sec-cmp"]{Compare unit}
 The arithmetic compare unit @tt{@bold{CMP}} wants one or two word inputs:
@@ -174,6 +162,7 @@ which arithmetic comparison to perform.
 It is used in conditional jump operations.
 If the comparator yields false, it inhibits the jump.
 The comparison is made for two's complement words and is not faulted by overflow.
+Jumps, both unconditional ones and both accepted or inhibited conditional ones take one clock-cycle.
 
 @section[#:tag "sec-circuits"]{Circuits}
 
@@ -186,7 +175,7 @@ Circuits are not clocked. They provide their outputs without waiting for clock-d
   (@tt{@bold{S+}} "address" "output"
     @roman{@tt{@bold{SP}}+1 modulo 2@↑{24}})
   (@tt{@bold{S-}} "address" "output"
-    @roman{@tt{@bold{SP}}@tt{-}1 modulo 2@↑{24}})
+    @roman{@tt{@bold{SP}}−1 modulo 2@↑{24}})
   (@tt{@bold{DA}} "word" "output"
     @roman{the sign extended datum part of the @tt{@bold{IR}}})
   (@tt{@bold{A1}} "word" "input"
@@ -207,31 +196,36 @@ Circuits are not clocked. They provide their outputs without waiting for clock-d
 Virtually, the simulated processor does nothing else than clocking buffers between
 registers, circuits, memory and the input and output controller.
 There are fifteen busses, three switchable ones and twelve fixed ones.
-They can transfer a signal during the same clock cycle.
+They can transfer their signals simultaneously during the same clock cycle.
+The input of a bus is called its `entrance´ and its output its `exit´.
 The opcode in the @tt{@bold{IR}} controls which register or circuit output is connected
 to the entrance of a switchable bus and to which register or circuit input its exit is connected.
 These switches are marked as ‘↑’.
 A fixed bus always has the same register or circuit output to its entrance and the same
 register or circuit input from its exit.
 Four of the fixed busses, marked by ‘f’, always are open.
-The other eight, marked by ‘s’, are open during clock up period
-but only when selected by the opcode.
+The other eight, marked by ‘s’, are open during clock up period when selected by the opcode.
+When a datum is transferred to a word register it is sign extended.
+When a datum is used as an address it is truncated to its 24 lower significant bits.
+When a word is transferred to an address register it is truncated to its 24 lower significant bits.
+When an address is transferred to a word-register it is extended with zero bits
+at the high significant end.
 
 @Tabular[
  (("from↓ to→" @tt{@bold{Rn}} @tt{@bold{SP}} @tt{@bold{S+}} @tt{@bold{S-}} @tt{@bold{PC}}
                @tt{@bold{P+}} @tt{@bold{A1}} @tt{@bold{A2}} @tt{@bold{C1}} @tt{@bold{C2}}
                @tt{@bold{MW}} @tt{@bold{MA}} @tt{@bold{IR}} @tt{@bold{DA}})
   @;              Rn  SP  S+  S-  PC  P+  A1  A2  C1  C2  MW  MA  IR  DA  
-  (@tt{@bold{Rn}} "↑" "↑" " " " " " " "↑" "↑" "↑" "↑" "↑" "↑" "↑" " " " ")
-  (@tt{@bold{SP}} "↑" "↑" "f" "f" " " "↑" "↑" "↑" "↑" "↑" "↑" "↑" " " " ")
+  (@tt{@bold{Rn}} "↑" " " " " " " " " "↑" "↑" "↑" "↑" "↑" "↑" "↑" " " " ")
+  (@tt{@bold{SP}} " " " " "f" "f" " " " " " " " " " " " " " " "s" " " " ")
   (@tt{@bold{S+}} " " "s" " " " " " " " " " " " " " " " " " " " " " " " ")
   (@tt{@bold{S-}} " " "s" " " " " " " " " " " " " " " " " " " "s" " " " ")
   (@tt{@bold{PC}} " " " " " " " " " " "s" " " " " " " " " " " "s" " " " ")
   (@tt{@bold{P+}} " " " " " " " " "f" " " " " " " " " " " " " " " " " " ")
-  (@tt{@bold{AO}} "↑" "↑" " " " " " " " " " " " " " " " " " " " " " " " ")
-  (@tt{@bold{MR}} "↑" "↑" " " " " " " " " " " " " " " " " " " " " "s" " ")
+  (@tt{@bold{AO}} "↑" " " " " " " " " " " " " " " " " " " " " " " " " " ")
+  (@tt{@bold{MR}} "↑" " " " " " " " " " " " " " " " " " " " " " " "s" " ")
   (@tt{@bold{IR}} " " " " " " " " " " " " " " " " " " " " " " " " " " "f")
-  (@tt{@bold{DA}} "↑" "↑" " " " " " " "s" " " " " " " " " " " "s" " " " "))
+  (@tt{@bold{DA}} "↑" " " " " " " " " " " " " " " " " " " " " "s" " " " "))
  #:sep "│"
  #:column-properties '(center)
  #:row-properties '((top-border bottom-border) bottom-border)]
@@ -254,8 +248,7 @@ always to points to the memory word following the word from which the last instr
 
 @section[#:tag "sec-assembler"]{Assembler}
 
-‘@tt{Ra}’, ‘@tt{Rb}’ and ‘@tt{Rb}’ are register designators:
-@tt{R0}, @tt{R1}, @tt{R2}, @tt{R3}, @tt{R4}, @tt{R5}, @tt{R6} or @tt{SP}@period @(lb)
+‘@tt{Ra}’, ‘@tt{Rb}’ and ‘@tt{Rb}’ are register designators: @tt{R0} .. @tt{R7}@period @(lb)
 An instruction has the form
 @inset{@tt{(opcode-mnemonic etc ...)}}
 It may be given a name for its address by writing
@@ -276,13 +269,13 @@ Arithmetical operations are in two's complement. Overflow is ignored.
   (@tt{(SET Ra Rb)} @roman{@tt{Ra} ← @tt{Rb}@period})
   (@tt{(SET Ra datum)} @roman{@tt{Ra} ← @tt{datum} (sign extended).})
   (@tt{(ADD Ra Rb Rc)} @roman{@tt{Ra} ← @tt{Rb+Rc}@period})
-  (@tt{(SUB Ra Rb Rc)} @roman{@tt{Ra} ← @tt{Rb-}Rc@period})
+  (@tt{(SUB Ra Rb Rc)} @roman{@tt{Ra} ← @tt{Rb}−Rc@period})
   (@tt{(MUL Ra Rb Rc)} @roman{@tt{Ra} ← @tt{Rb}×@tt{Rc}@period})
   (@tt{(DIV Ra Rb Rc)} @roman{@tt{Ra} ← @tt{Rb/Rc}, integer division@period})
   (@tt{(SHL Ra Rb Rc)} @roman{Put Rb into Ra, but left shifted by Rc bits.})
   (@tt{(SHR Ra Rb Rc)} @roman{Put Rb into Ra, but right shifted by Rc bits without sign extension.})
   (@tt{(SHE Ra Rb Rc)} @roman{Put Rb into Ra, but right shifted by Rc bits and sign extended.})
-  (@tt{(NEG Ra Rb)} @roman{@tt{Ra} ← @tt{-Rb}@period})
+  (@tt{(NEG Ra Rb)} @roman{@tt{Ra} ← −@tt{Rb}@period})
   (@tt{(AND Ra Rb Rc)} @roman{@tt{Ra} ← @tt{Rb˄Rc}, bitwise and.})
   (@tt{(IOR Ra Rb Rc)} @roman{@tt{Ra} ← @tt{Rb˅Rc}, bitwise inclusive or.})
   (@tt{(NOT Ra Rb)} @roman{@tt{Ra} ← @tt{@roman{¬}Rb}, bitwise not.})
@@ -337,7 +330,7 @@ Arithmetical operations are in two's complement. Overflow is ignored.
 The @tt{PSH} and @tt{POP} instructions use the @tt{@bold{SP}} for addressing.
 When pushing, address @tt{@bold{SP}} is used and @tt{@bold{SP}} is decreased by one.
 When popping @tt{@bold{S+}} is used as address and @tt{@bold{SP}} is increased by one.
-At the start of execution @tt{@bold{SP}} is 2@↑{24}@tt{-}1.
+At the start of execution @tt{@bold{SP}} is 2@↑{24}−1.
 @tt{PSH} and @tt{POP} instructions should be balanced like parentheses.
 Instructions @tt{WRT} and @tt{RÆD} use direct access to memory.
 They take as many cycles as words read or written
@@ -365,13 +358,13 @@ Before assembling the memory is cleared.}
 @defparam*[show-source-code ‹on/off› any/c boolean? #:value #t]{
  When this parameter is true, the @nbrl[assemble]{assembler} shows the program to be assembled.}
 
-@defparam*[show-assembled-program ‹on/off› any/c boolean? #:value #t]{
+@defparam*[show-assembled-code ‹on/off› any/c boolean? #:value #t]{
  When this parameter is true, the @nbrl[assemble]{assembler} shows the assembled program.}
 
 @defparam[align ‹n› exact-nonnegative-integer? #:value 3]{
  In a print of the executed instructions as indicated by parameter @nbr[show-instructions],
  each line begins with a line number.
- This number is right aligned in a field of @nbr[(align)] digits.
+ This number is right aligned in a field of @tt{(@nbr[align])} digits.
  Line numbers requiring more digits are not truncated.}
 
 @defparam[OUT-port ‹port› output-port? #:value (current-output-port)]{
@@ -396,7 +389,7 @@ Before assembling the memory is cleared.}
 
  @Interaction[
  (parameterize
-   ((show-assembled-program #f)
+   ((show-assembled-code #f)
     (show-source-code #f)
     (show-registers #f))
    (execute
@@ -418,7 +411,7 @@ Before assembling the memory is cleared.}
  @Interaction[
  (parameterize
    ((max-nr-of-instrs 5)
-    (show-assembled-program #f)
+    (show-assembled-code #f)
     (show-source-code #f)
     (show-registers #f))
    (execute '((loop : JMP loop))))]}
@@ -438,6 +431,7 @@ Before assembling the memory is cleared.}
   (defidform #:kind "word register" R4)
   (defidform #:kind "word register" R5)
   (defidform #:kind "word register" R6)
+  (defidform #:kind "word register" R7)
   (defidform #:kind "address register" SP)
   (defidform #:kind "address register" PC)
   (defidform #:kind "instruction register" IR))]}

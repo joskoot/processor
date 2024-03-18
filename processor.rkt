@@ -1,531 +1,499 @@
 #lang racket/base
 
 ;═════════════════════════════════════════════════════════════════════════════════════════════════════
-; Documentation can be made from file "processor.scrbl"
-;═════════════════════════════════════════════════════════════════════════════════════════════════════
 
 (provide
-  assemble execute
-  show-source-code show-registers show-assembled-program show-instructions
-  max-nr-of-instrs align catch-exn reset
-  INP-port OUT-port
-  print-memory print-stack print-registers
-  R0 R1 R2 R3 R4 R5 R6 SP PC IR)
+  execute
+  assemble
+  INP-port
+  OUT-port
+  show-source-code
+  show-assembled-code
+  show-instructions
+  show-registers
+  print-registers
+  print-memory
+  print-stack
+  align
+  max-nr-of-instrs
+  catch-exn
+  R0 R1 R2 R3 R4 R5 R6 R7 SP PC IR)
 
-;═════════════════════════════════════════════════════════════════════════════════════════════════════
+(require (only-in racket ~r natural? match flatten))
 
-(require (only-in racket ~r match natural?))
 (define INTEGER? exact-integer?)
 (define AND bitwise-and)
 (define IOR bitwise-ior)
 (define NOT bitwise-not)
-(define SHIFT arithmetic-shift)
-(define (~h n width) (string-upcase (~r n #:base 16 #:min-width width #:pad-string "0")))
-(define (force-bool x) (and x #t))
-(define W-size 64) ; words
-(define A-size 24) ; addresses (have no sign, never negative)
-(define D-size 40) ; datum-part of an instruction
-(define W-digits (quotient W-size 4))
-(define A-digits (quotient A-size 4))
-(define W-mask (sub1 (SHIFT 1 W-size)))
-(define A-mask (sub1 (SHIFT 1 A-size)))
-(define D-mask (sub1 (SHIFT 1 D-size)))
-(define W-sign-extension (SHIFT -1 W-size))
-(define D-sign-extension (SHIFT -1 D-size))
-(define W-sign-bit (SHIFT 1 (sub1 W-size)))
-(define D-sign-bit (SHIFT 1 (sub1 D-size)))
-(define (W-negative? w) (not (zero? (AND W-sign-bit w))))
-(define (D-negative? w) (not (zero? (AND D-sign-bit w))))
-(define (D-sign-extend d) (if (D-negative? d) (IOR d D-sign-extension) d))
-(define (mask-W w) (AND w W-mask))
-(define (mask-A a) (AND a A-mask))
-(define (mask-D d) (AND d D-mask))
-(define (D->W d) (if (D-negative? d) (mask-W (D-sign-extend d)) d))
-(define (W-fmt-hex w) (~h w W-digits))
-(define (A-fmt-hex a) (~h a A-digits))
-
-(define (W-sign-extend w)
-  (let ((w (if (E? w) (w) w)))
-    (if (W-negative? w)
-      (IOR w W-sign-extension)
-      w)))
-  
-(define (W-printer o p m) (fprintf p "#<~s:~a>" (E-name o) (W-fmt-hex ((E-proc o)))))
-(define (A-printer o p m) (fprintf p "#<~s:~a>" (E-name o) (A-fmt-hex ((E-proc o)))))
-(struct E (name proc) #:property prop:object-name 0 #:property prop:procedure 1)
-(struct W E () #:property prop:custom-write W-printer)
-(struct A E () #:property prop:custom-write A-printer)
-
-(define (make-W/A-proc mask)
-  (let ((in 0) (out 0))
-    (λ ((event #f))
-      (cond
-        ((not event) out)
-        ((eq? event 'clock) (set! out in) in)
-        (else (set! in (AND mask event)) out)))))
-
-(define (make-W-proc) (make-W/A-proc W-mask))
-(define (make-A-proc) (make-W/A-proc A-mask))
-(define (make-W name) (W name (make-W-proc)))
-(define (make-A name) (A name (make-A-proc)))
-(define IR (make-W 'IR))
-(define R0 (make-W 'R0))
-(define R1 (make-W 'R1))
-(define R2 (make-W 'R2))
-(define R3 (make-W 'R3))
-(define R4 (make-W 'R4))
-(define R5 (make-W 'R5))
-(define R6 (make-W 'R6))
-(define SP (make-A 'SP))
-(define PC (make-A 'PC))
-(define register-vector (vector R0 R1 R2 R3 R4 R5 R6 SP PC)) 
-(define (reset-registers) (for ((R (in-vector register-vector))) (clock (R 0))) (clock (SP A-mask)))
-(define (P+ . ignore) (mask-A (add1 (PC))))
-(define (S+ . ignore) (mask-A (add1 (SP))))
-(define (S- . ignore) (mask-A (sub1 (SP))))
-(define (DA . ignore) (mask-W (D-sign-extend (mask-D (IR)))))
-(define (ALU op Ra Rb) (mask-W (op (W-sign-extend (Ra)) (W-sign-extend (Rb)))))
-(define (SHL w k) (SHIFT w (max 0 k)))
-(define (SHR w k) (SHIFT (mask-W w) (- (max 0 k))))
-(define (SHE w k) (SHIFT w (- (max 0 k))))
-(define (CMP op Ra (Rb #f)) (op (W-sign-extend (Ra)) (if Rb (W-sign-extend (Rb)) 0)))
-(define (make-memory) (make-vector (SHIFT 1 A-size) 0))
-(define memory (make-memory))
-(define (reset-memory) (set! memory (make-memory)))
-(define cycle-count 0) ; A program takes as many clock cycles as references to memory.
-(define (reset) (reset-memory) (reset-registers) (set! cycle-count 0))
-
-(define (MEM addr (w #f))
-  (set! cycle-count (add1 cycle-count))
-  (if w
-    (vector-set! memory (mask-A addr) w)
-    (vector-ref memory (mask-A addr))))
- 
-(define (print-registers)
-  (for ((R (in-vector register-vector)))
-    (printf "~s : ~s~n" R (W-sign-extend (R)))))
-
-(define (print-memory n)
-  (unless (natural? n)
-    (raise-argument-error 'print-memory "natural?" n))
-  (for ((k (in-range n)))
-    (define w (vector-ref memory k))
-    (printf "~a : ~a : ~s~n" (A-fmt-hex k) (W-fmt-hex w) w)))
-
-(define (print-stack n)
-  (unless (natural? n)
-    (raise-argument-error 'print-stack "natural?" n))
-  (define end (add1 A-mask))
-  (for ((k (in-range (- end n) end)))
-    (define w (vector-ref memory k))
-    (printf "~a : ~a : ~s~n" (A-fmt-hex k) (W-fmt-hex w) w)))
+(define SHIFTL arithmetic-shift)
+(define (SHIFTR e k) (arithmetic-shift e (- k)))
+(define (~h e width) (string-upcase (~r e #:min-width width #:base 16 #:pad-string "0")))
+(define (force-bool b) (and b #t))
 
 (define (OUT-port-guard p)
   (unless (output-port? p) (raise-argument-error 'OUT-port "output-port?" p))
   p)
 
 (define (INP-port-guard p)
-  (unless (input-port? p) (raise-argument-error 'INP-port "input-port?" p))
+  (unless (input-port? p) (raise-argument-error 'IN-port "input-port?" p))
   p)
 
 (define (align-guard n)
-  (unless (natural? n)
-    (raise-argument-error 'align "natural?" n))
+  (unless (natural? n) (raise-argument-error 'align "natural?" n))
   n)
 
 (define (max-nr-of-instrs-guard n)
-  (unless (natural? n)
-    (raise-argument-error 'max-nr-of-instrs "natural?" n))
+  (unless (natural? n) (raise-argument-error 'max-nr-of-instrs "natural?" n))
   n)
 
-(define show-registers (make-parameter #t force-bool 'show-registers))
-(define show-instructions (make-parameter #t force-bool 'show-instructions))
-(define show-assembled-program (make-parameter #t force-bool 'show-assembled-program))
-(define show-source-code (make-parameter #t force-bool 'show-source-code))
-(define align (make-parameter 3 align-guard 'align))
 (define OUT-port (make-parameter (current-output-port) OUT-port-guard 'OUT-port))
 (define INP-port (make-parameter (current-input-port) INP-port-guard 'INP-port))
+(define show-assembled-code (make-parameter #t force-bool 'show-assembled-code))
+(define show-source-code (make-parameter #t force-bool 'show-source-code))
+(define show-instructions (make-parameter #t force-bool 'show-instructions))
+(define show-registers (make-parameter #t force-bool 'show-registers))
+(define align (make-parameter 3 align-guard 'alugn))
+(define catch-exn (make-parameter #f force-bool 'catch-exn?))
 (define max-nr-of-instrs (make-parameter 1000 max-nr-of-instrs-guard 'max-nr-of-instrs))
-(define catch-exn (make-parameter #t force-bool 'catch-exn?))
+
+(define (print-registers)
+  (newline)
+  (for ((R (in-list registers))) (printf "~s~n" R))
+  (printf "~s~n" PC)
+  (printf "~s~n" SP))
 
 (define (ALIGN k)
-  (let* ((strng (format "~s" k)) (n (string-length strng)) (m (align)))
-    (string-append (make-string (max 0 (- m n)) #\space) strng)))
+  (let* ((str (format "~s" k)) (n (string-length str)) (m (align)))
+    (if (< n m)
+      (string-append (make-string (- m n) #\space) str)
+      str)))
 
-(define-values (opcode-pos cc-pos ra-pos rb-pos rc-pos) (values 56 52 48 44 40))
-(define-values (opcode-mask cc-mask r-mask) (values #xFF #xF #xF))
+(struct R (name proc) #:property prop:object-name 0 #:property prop:procedure 1)
+(define (W-custom-write W port mode) (fprintf port "#<~s:~a>" (R-name W) (W-fmt-hex (W))))
+(define (A-custom-write A port mode) (fprintf port "#<~s:~a>" (R-name A) (A-fmt-hex (A))))
+(struct W R () #:property prop:custom-write W-custom-write)
+(struct A R () #:property prop:custom-write A-custom-write)
+(define (W-fmt-hex w) (~h w W-digits))
+(define (A-fmt-hex a) (~h a A-digits))
 
-(define (compose-instr op cc ra rb rc d)
-  (IOR
-    (SHIFT op opcode-pos)
-    (SHIFT cc cc-pos)
-    (SHIFT ra ra-pos)
-    (SHIFT rb rb-pos)
-    (SHIFT rc rc-pos)
-    (mask-D d)))
+(define W-digits 16)
+(define W-bits (* 4 W-digits))
+(define W-mask (sub1 (SHIFTL 1 W-bits)))
+(define W-sign-bit (SHIFTL 1 (sub1 W-bits)))
+(define W-sign-extension (SHIFTL -1 W-bits))
+(define (W-positive? w) (zero? (AND W-sign-bit w)))
+(define (W-sign-extend w) (if (W-positive? w) w (IOR W-sign-extension w)))
 
-(define (decompose-instr instr)
-  (values
-    (AND opcode-mask (SHIFT instr (- opcode-pos)))
-    (AND cc-mask     (SHIFT instr (- cc-pos)))
-    (AND r-mask      (SHIFT instr (- ra-pos)))
-    (AND r-mask      (SHIFT instr (- rb-pos)))
-    (AND r-mask      (SHIFT instr (- rc-pos)))
-    (mask-D instr)))
+(define A-digits 6)
+(define A-bits (* 4 A-digits))
+(define MEM-size (SHIFTL 1 A-bits))
+(define A-mask (sub1 MEM-size))
+(define A-sign-bit (SHIFTL 1 (sub1 A-bits)))
 
-(define mnemonics
-  `((#x0 #f  STP #f)
-    (#x1 #f  NOP #f)
-    (#x2 #f  SET #f)
-    (#x3 #x0 ADD ,+)
-    (#x3 #x1 SUB ,-)
-    (#x3 #x2 MUL ,*)
-    (#x3 #x3 DIV ,quotient)
-    (#x3 #x4 AND ,AND)
-    (#x3 #x5 IOR ,IOR)
-    (#x3 #x6 SHL ,SHL)
-    (#x3 #x7 SHR ,SHR)
-    (#x3 #x8 SHE ,SHE)
-    (#x3 #x9 NEG ,(λ (x (y 0)) (- (W-sign-extend x))))
-    (#x3 #xA NOT ,(λ (x (y 0)) (NOT x)))
-    (#x4 #x0 EQ? ,(λ (x (y 0)) (= (x) (y))))
-    (#x4 #x1 LT? ,(λ (x (y 0)) (<  (W-sign-extend x) (W-sign-extend y))))
-    (#x4 #x2 GT? ,(λ (x (y 0)) (>  (W-sign-extend x) (W-sign-extend y))))
-    (#x4 #x3 LE? ,(λ (x (y 0)) (<= (W-sign-extend x) (W-sign-extend y))))
-    (#x4 #x4 GE? ,(λ (x (y 0)) (>= (W-sign-extend x) (W-sign-extend y))))
-    (#x5 #x0 =0? ,zero?)
-    (#x5 #x1 <0? ,(λ (x (y 0)) (<  (W-sign-extend x) 0)))
-    (#x5 #x2 >0? ,(λ (x (y 0)) (>  (W-sign-extend x) 0)))
-    (#x5 #x3 ≤0? ,(λ (x (y 0)) (<= (W-sign-extend x) 0)))
-    (#x5 #x4 ≥0? ,(λ (x (y 0)) (>= (W-sign-extend x) 0)))             
-    (#x6 #f  JMP #f)
-    (#x7 #f  PSH #f)
-    (#x8 #f  POP #f)
-    (#x9 #f  MRD #f)
-    (#xA #f  MWR #f)
-    (#xB #f  OUT #f)
-    (#xC #f  INP #f)
-    (#xD #f  WRT #f)
-    (#xE #f  RÆD #f)))
+(define D-digits 10)
+(define D-bits (* 4 D-digits))
+(define D-mask (sub1 (SHIFTL 1 D-bits)))
+(define D-sign-bit (SHIFTL 1 (sub1 D-bits)))
+(define D-sign-extension (SHIFTL -1 D-bits))
+(define (D-positive? d) (zero? (AND D-sign-bit d)))
+(define (D-sign-extend d) (if (D-positive? d) d (IOR D-sign-extension d)))
 
-(define mnemonic->opcode/cc
-  (let
-    ((mnemonics (map caddr mnemonics))
-     (opcodes (map car mnemonics))
-     (ccs (map cadr mnemonics)))
-    (let*
-      ((mnemonic->opcode/cc (λ (mnemonic opcode cc) (cons mnemonic (list opcode (or cc 0)))))
-       (mnemonic-hash (make-immutable-hasheq (map mnemonic->opcode/cc mnemonics opcodes ccs))))
-      (λ (mnemonic) (apply values (hash-ref mnemonic-hash mnemonic (λ () (list 'DATUM #f))))))))
+(define (make-W name)
+  (W name
+    (let ((in 0) (out 0))
+      (λ ((event #f))
+        (cond
+          ((not event) out)
+          ((INTEGER? event) (set! in (AND W-mask event)) out)
+          (else (set! out in) in))))))
 
-(define (opcode/cc->mnemonic/CC opc cc)
-  (apply values
-    (or
-      (for/first
-        ((descr (in-list mnemonics))
-         #:when (and (= opc (car descr)) (or (not (cadr descr)) (= cc (cadr descr)))))
-        (cddr descr))
-      (error 'execute "unknown opcode/cc: #x~a #x~a" (~h opc 2) (~h cc 1)))))
+(define (make-A name)
+  (A name
+    (let ((in 0) (out 0))
+      (λ ((event #f))
+        (cond
+          ((not event) out)
+          ((eq? event 'clock) (set! out in) in)
+          (else (set! in (AND A-mask event)) out))))))
+
+(define register-names '(R0 R1 R2 R3 R4 R5 R6 R7))
+(define registers (map make-W register-names))
+(define-values (R0 R1 R2 R3 R4 R5 R6 R7) (apply values registers))
+(define R->r-hash (for/hasheq ((R (in-list register-names)) (r (in-range 8))) (values R r)))
+(define r->R-hash (for/hasheq ((R (in-list registers)) (r (in-range 8))) (values r R)))
+(define SP (make-A 'SP))
+(define PC (make-A 'PC))
+(define IR (make-W 'IR))
+(define (DA) (D-sign-extend (AND D-mask (IR))))
+(define (reset-registers) (for ((R (in-list registers))) (clock (R 0))) (clock (PC 0) (SP A-mask)))
+
+(define (r->R r)
+  (cond
+    ((< r 8) (hash-ref r->R-hash r))
+    ((= r 8) DA)
+    (else (error 'execute "unknow register nr: ~s" r))))
+
+(define (R->r R)
+  (if (eq? R 'DA) 8
+    (hash-ref R->r-hash R (λ () (error 'assemble "unknown register: ~s" R)))))
+
+(define MEM (make-vector MEM-size 0))
+(define (MEM-reset) (set! MEM (make-vector MEM-size 0)))
+
+(define (MEM-ref who a)
+  (define addr (AND A-mask a))
+  (set! cycle-count (add1 cycle-count))
+  (vector-ref MEM addr))
+
+(define (MEM-set! who a w)
+  (define addr (AND A-mask a))
+  (set! cycle-count (add1 cycle-count))
+  (vector-set! MEM addr w))
+
+(define (print-memory n m)
+  (unless (natural? n) (raise-argument-error 'print-memory "natural?" n))
+  (unless (natural? m) (raise-argument-error 'print-memory "natural?" n))
+  (for ((k (in-range (min MEM-size n) (min MEM-size (+ n m)))))
+    (define w (MEM-ref 'print-memory k))
+    (printf "~a : ~a : ~s~n" (A-fmt-hex k) (W-fmt-hex w) (W-sign-extend w))))
+
+(define (print-stack n)
+  (unless (natural? n) (raise-argument-error 'print-memory "natural?" n))
+  (for ((k (in-range (- MEM-size n) MEM-size)))
+    (define w (MEM-ref 'print-stack k))
+    (printf "~a : ~a : ~s~n" (A-fmt-hex k) (W-fmt-hex w) (W-sign-extend w))))
+
+(define cycle-count 0)
+
+(define (inp who) ; Read one word
+  (define w (read (INP-port)))
+  (unless (INTEGER? w) (raise-argument-error who "exact-integer?" w))
+  w)
+
+(define (out w) ; Write one word
+  (fprintf (OUT-port) "output : ~a : ~s~n"
+    (W-fmt-hex w)
+    (W-sign-extend w)))
+
+(define (PSH Ra) (MEM-set! 'PSH (SP) (Ra)) (clock+ (SP (sub1 (SP)))))
+(define (POP Ra) (define sp (add1 (SP))) (clock! (Ra (MEM-ref 'POP sp)) (SP sp)))
+(define (NOP) (next-instr))
+(define (SET Ra Rb) (clock+ (Ra (Rb))))
+(define (ALU CC Ra Rb Rc) (clock+ (Ra (CC (W-sign-extend (Rb)) (W-sign-extend (Rc))))))
+(define (ALU-unary CC Ra Rb) (clock+ (Ra (CC (W-sign-extend (Rb))))))
+(define (JMP Ra) (clock (IR (MEM-ref 'JMP (Ra))) (PC (add1 (Ra)))))
+
+(define (CMP CC Ra Rb Rc)
+  (if (CC (W-sign-extend (Ra)) (W-sign-extend (Rb)))
+    (JMP Rc)
+    (next-instr)))
+
+(define (CMP-unary CC Ra Rb)
+  (if (CC (W-sign-extend (Ra)) 0)
+    (JMP Rb)
+    (next-instr)))
+
+(define (INP Ra) (clock! (Ra (inp 'INP)))) ; Read one word
+(define (OUT R) (out (R)) (next-instr)) ; Write one word
+
+(define (RÆD Ra Rb) ; Read Rb words into memory starting at address Ra
+  (define from (Ra))
+  (define n (Rb))
+  (for ((addr (in-range from (+ from n) 1)))
+    (MEM-set! 'RÆD addr (AND W-mask (inp 'RÆD))))
+  (next-instr))
+
+(define (WRT Ra Rb) ; Write Rb words from memory starting at address Ra
+  (define from (Ra))
+  (define n (Rb))
+  (for ((addr (in-range from (+ from n) 1)))
+    (out (MEM-ref 'WRT addr)))
+  (next-instr))
+
+(define (MRD Ra Rb) (clock! (Ra (MEM-ref 'MRD (AND A-mask (Rb))))))
+(define (MWR Ra Rb) (MEM-set! 'MWR (AND A-mask (Rb)) (Ra)) (next-instr))
 
 (define-syntax-rule
   (clock (R v) ...)
-  (begin (R v) ... (R 'clock) ...))
+  (begin
+    (R v) ...
+    (R 'clock) ...))
 
-(define-syntax-rule ; Read next instr in same cycle
+(define-syntax-rule
   (clock+ (R v) ...)
-  (clock (R v) ... (IR (MEM (PC))) (PC (P+))))
+  (clock (R v) ... (IR (MEM-ref 'PC (PC))) (PC (add1 (PC)))))
 
-(define-syntax-rule ; Read next instr in next cycle
+(define-syntax-rule
   (clock! (R v) ...)
   (begin (clock (R v) ...) (clock+)))
 
 (define (next-instr) (clock+))
+(define (SHL Ra Rb Rc) (clock+ (Ra (SHIFTL (Rb) (Rc)))))
+(define (SHR Ra Rb Rc) (clock+ (Ra (SHIFTR (Rb) (Rc)))))
+(define (SHE Ra Rb Rc) (clock+ (Ra (SHIFTR (W-sign-extend (Rb)) (Rc)))))
 
-;═════════════════════════════════════════════════════════════════════════════════════════════════════
+(define M-table
+  `((#x00 (#f  STP 0 ,(λ () (void))))
+    (#x01 (#f   NOP 0 ,NOP))
+    (#x02 (#f   SET 2 ,SET))
+    (#x03 (#x0 ADD 3 ,(λ (Ra Rb Rc) (ALU +         Ra Rb Rc)))
+          (#x1 SUB 3 ,(λ (Ra Rb Rc) (ALU -         Ra Rb Rc)))
+          (#x2 MUL 3 ,(λ (Ra Rb Rc) (ALU *         Ra Rb Rc)))
+          (#x3 DIV 3 ,(λ (Ra Rb Rc) (ALU quotient  Ra Rb Rc)))
+          (#x4 REM 3 ,(λ (Ra Rb Rc) (ALU remainder Ra Rb Rc)))
+          (#x5 SHL 3 ,(λ (Ra Rb Rc) (SHL           Ra Rb Rc)))
+          (#x6 SHR 3 ,(λ (Ra Rb Rc) (SHR           Ra Rb Rc)))
+          (#x7 SHE 3 ,(λ (Ra Rb Rc) (SHE           Ra Rb Rc)))
+          (#x8 AND 3 ,(λ (Ra Rb Rc) (ALU AND       Ra Rb Rc)))
+          (#x9 IOR 3 ,(λ (Ra Rb Rc) (ALU IOR       Ra Rb Rc))))
+    (#x04 (#x0 NEG 2 ,(λ (Ra Rb)    (ALU-unary -   Ra Rb)   ))
+          (#x1 NOT 2 ,(λ (Ra Rb)    (ALU-unary NOT Ra Rb   ))))
+    (#x05 (#f  JMP 1 ,JMP))
+    (#x06 (#x0 EQ? 3 ,(λ (Ra Rb Rc) (CMP =         Ra Rb Rc)))
+          (#x1 LT? 3 ,(λ (Ra Rb Rc) (CMP <         Ra Rb Rc)))
+          (#x2 GT? 3 ,(λ (Ra Rb Rc) (CMP >         Ra Rb Rc)))
+          (#x3 LE? 3 ,(λ (Ra Rb Rc) (CMP <=        Ra Rb Rc)))
+          (#x4 GE? 3 ,(λ (Ra Rb Rc) (CMP >=        Ra Rb Rc))))
+    (#x07 (#x0 =0? 2 ,(λ (Ra Rb)    (CMP-unary =   Ra Rb   )))
+          (#x1 <0? 2 ,(λ (Ra Rb)    (CMP-unary <   Ra Rb   )))
+          (#x2 >0? 2 ,(λ (Ra Rb)    (CMP-unary >   Ra Rb   )))
+          (#x3 ≤0? 2 ,(λ (Ra Rb)    (CMP-unary <=  Ra Rb   )))
+          (#x4 ≥0? 2 ,(λ (Ra Rb)    (CMP-unary >=  Ra Rb   ))))
+    (#x08 (#f  INP R ,INP))
+    (#x09 (#f  OUT 1 ,OUT))
+    (#x0A (#f  RÆD 2 ,RÆD))
+    (#x0B (#f  WRT 2 ,WRT))
+    (#x0C (#f  PSH 1 ,PSH))
+    (#x0D (#f  POP R ,POP))
+    (#x0E (#f  MWR 2 ,MWR))
+    (#x0F (#f  MRD 2 ,MRD))))
+
+(define M-table-opcode car)
+(define M-table-descrs cdr)
+(define M-table-cc car)
+(define M-table-mnemonic cadr)
+(define M-table-R caddr)
+(define M-table-proc cadddr)
+
+(define opcode/cc->M/proc-hash
+  (for/hasheq ((entry (in-list M-table)))
+    (define opcode (M-table-opcode entry))
+    (define subtable (cdr entry))
+    (values opcode
+      (cond
+        ((null? (cdr subtable))
+         (define descr (car subtable))
+         (list (M-table-mnemonic descr) (M-table-proc descr)))
+        (else
+          (for/hasheq ((descr (in-list subtable)))
+            (values (M-table-cc descr)
+              (list (M-table-mnemonic descr) (M-table-proc descr)))))))))
+
+(define (opcode/cc->M/proc opcode cc)
+  (define (opcode/cc-error) (error "unknown opcode/cc" opcode cc))
+  (define entry (hash-ref opcode/cc->M/proc-hash opcode opcode/cc-error))
+  (cond
+    ((hash? entry)
+     (define entri (hash-ref entry cc opcode/cc-error))
+     (values (car entri) (cadr entri)))
+    (else (values (car entry) (cadr entry)))))
+
+(define M->opcode/cc/form-hash
+  (make-immutable-hasheq
+    (let loop ((table M-table))
+      (cond
+        ((null? table) '())
+        (else
+          (define entry (car table))
+          (define opcode (car entry))
+          (cond
+            ((= (length entry) 2)
+             (define descr (cadr entry))
+             (cons
+               (cons (M-table-mnemonic descr) (list opcode 0 (M-table-R descr)))
+               (loop (cdr table))))
+            (else
+              (append
+                (let loop ((subtable (cdr entry)))
+                  (cond
+                    ((null? subtable) '())
+                    (else
+                      (define descr (car subtable))
+                      (cons
+                        (cons
+                          (M-table-mnemonic descr)
+                          (list opcode (M-table-cc descr) (M-table-R descr)))
+                        (loop (cdr subtable))))))
+                (loop (cdr table))))))))))
+
+(define (M->opcode/cc/form M)
+  (define (M-error) (error "unknown mnemonic" M))
+  (apply values (hash-ref M->opcode/cc/form-hash M M-error)))
+
+(define opcode-pos 56)
+(define cc-pos 52)
+(define ra-pos 48)
+(define rb-pos 44)
+(define rc-pos 40)
+
+(define (compose-instr opcode cc ra rb rc da)
+  (IOR
+    (SHIFTL opcode opcode-pos)
+    (SHIFTL cc cc-pos)
+    (SHIFTL ra ra-pos)
+    (SHIFTL rb rb-pos)
+    (SHIFTL rc rc-pos)
+    (AND D-mask da)))
+
+(define (decompose-instr instr)
+  (values
+    (AND #xFF (SHIFTR instr opcode-pos))
+    (AND #xF (SHIFTR instr cc-pos))
+    (AND #xF (SHIFTR instr ra-pos))
+    (AND #xF (SHIFTR instr rb-pos))
+    (AND #xF (SHIFTR instr rc-pos))
+    (AND D-mask instr)))    
 
 (define (execute (source-code #f))
-  (define-syntax-rule (catch-exn:fail expr ...)
-    (with-handlers ((exn:fail? (λ (exn) (displayln (exn-message exn) (current-error-port)))))
-      (begin expr ...)))
-
-  (define (executor k)
-    (define r->R
-      (let ((registers (vector R0 R1 R2 R3 R4 R5 R6 SP DA)))
-        (λ (r)
-          (cond
-            ((<= r 8) (vector-ref registers r))
-            (else (error 'execute "unknown register designator: #x~a" (~h r 1)))))))
-    
-    (define-syntax-rule (rs->Rs (r R) ...) (begin (define R (r->R r)) ...))
-    (define-values (opcode cc ra rb rc da) (decompose-instr (IR)))
-    (define-values (mnemonic CC) (opcode/cc->mnemonic/CC opcode cc))
-    
-    (when (show-instructions)
-      (printf "~a : ~a : ~a : ~a ~a ~a ~a ~a ~a : ~s~n"
-        (ALIGN k)
-        (~h (mask-A (sub1 (PC))) 6)
-        mnemonic
-        (~h opcode 2)
-        (~h cc 1)
-        (~h ra 1)
-        (~h rb 1)
-        (~h rc 1)
-        (~h da 10)
-        cycle-count))
-    
-    (cond
-      ((zero? opcode)
-       (cond
-         ((show-registers) (printf " ~nRegisters after program termination~n") (print-registers))
-         (else (printf " ~nProgram terminated after ~s cycles~n" cycle-count))))
-      (else
-        (case opcode
-          ((#x01) ; STP
-           (next-instr))
-          ((#x02) ; NOP
-           (rs->Rs (ra Ra) (rb Rb))
-           (clock+ (Ra (Rb))))
-          ((#x03) ; ADD, SUV, MUL, DIV, etc. 
-           (rs->Rs (ra Ra) (rb Rb) (rc Rc))
-           (clock+ (Ra (ALU CC Rb Rc))))
-          ((#x04) ; Conditional jump: EQ?, LR?, GT?, etc.
-           (rs->Rs (ra Ra) (rb Rb) (rc Rc))
-           (cond
-             ((CC Ra Rb)
-              (define addr (Rc))
-              (clock (IR (MEM addr)) (PC (add1 addr))))
-             (else (next-instr))))
-          ((#x05) ; Conditional jump: =0?, <0?, >0?, etc.
-           (rs->Rs (ra Ra) (rb Rb))
-           (cond
-             ((CC (Ra))
-              (define addr (Rb))
-              (clock (IR (MEM addr)) (PC (add1 addr))))
-             (else (next-instr))))
-          ((#x06) ; JMP
-           (rs->Rs (ra Ra))
-           (define addr (Ra))
-           (clock (IR (MEM addr)) (PC (add1 addr))))
-          ((#x07) ; PSH
-           (rs->Rs (ra Ra))
-           (MEM (SP) (Ra)) (clock+ (SP (S-))))
-          ((#x08) ; POP
-           (rs->Rs (ra Ra))
-           (define addr (S+)) (clock! (SP addr) (Ra (MEM addr))))
-          ((#x09) ; MRD
-           (rs->Rs (ra Ra) (rb Rb))
-           (define addr (Rb)) (clock! (Ra (MEM addr))))
-          ((#x0A) ; MWR
-           (rs->Rs (ra Ra) (rb Rb))
-           (MEM (Rb) (Ra)) (next-instr))
-          ((#x0B) ; OUT
-           (rs->Rs (ra Ra))
-           (fprintf (OUT-port) "output: ~a : ~s~n" (W-fmt-hex (Ra)) (W-sign-extend (Ra)))
-           (next-instr))
-          ((#x0C) ; INP
-           (rs->Rs (ra Ra))
-           (clock! (Ra (read (INP-port)))))
-          ((#x0D) ; WRT
-           (rs->Rs (ra Ra) (rb Rb))
-           (define start (Ra)) (define length (Rb))
-           (for ((addr (in-range start (+ start length) +1)))
-             (define w (MEM addr))
-             (fprintf (OUT-port) "output : ~a ~s~n" (W-fmt-hex w) (W-sign-extend w)))
-           (next-instr))
-          ((#x0E) ; RÆD
-           (rs->Rs (ra Ra) (rb Rb))
-           (define start (Ra)) (define length (W-sign-extend (Rb)))
-           (for ((addr (in-range start (+ start length) +1))) (MEM addr (read (INP-port))))
-           (next-instr))
-          (else (error 'execute "unrecognized opcode/cc: #x~a #x~a" (~h opcode 2) (~h cc 1))))
-        (cond
-          ((>= k (max-nr-of-instrs)) (printf "Max nr of instructions exceeded : max=~s~n" k))
-          (else (executor (add1 k)))))))
-  
   (when source-code (assemble source-code))
-  (set! cycle-count 0)
   (reset-registers)
-  (next-instr)
-  (when (show-instructions) (printf " ~nExecuting~n"))
-  (if (catch-exn) (catch-exn:fail (executor 0)) (executor 0)))
+  (set! cycle-count 0)
+  (printf "~nExecuting~n")
+  (cond
+    ((catch-exn)
+     (with-handlers ((exn:fail? (λ (exn) (displayln (exn-message exn) (current-error-port)))))
+       (next-instr) (executor 0 0)))
+    (else (next-instr) (executor 0 0))))
 
-;═════════════════════════════════════════════════════════════════════════════════════════════════════
+(define (executor k pc)
+  (when (> k (max-nr-of-instrs)) (error 'execute "max nr of instrs exceeded: ~s" k))
+  (define-values (opcode cc ra rb rc da) (decompose-instr (IR)))
+  (define-values (M proc) (opcode/cc->M/proc opcode cc))
+  (when (show-instructions)
+    (printf "~a : ~s : ~a ~a ~a ~a ~a ~a : ~a : ~s~n"
+      (ALIGN k)
+      M
+      (~h opcode 2)
+      (~h cc 1)
+      (~h ra 1)
+      (~h rb 1)
+      (~h rc 1)
+      (~h da 10)
+      (~h pc 6)
+      cycle-count))
+  (cond
+    ((zero? opcode)
+     (unless (show-instructions) (printf "Execution halted after ~s cycles~n" cycle-count))
+     (when (show-registers) (print-registers)))
+    (else
+      (case (procedure-arity proc)
+        ((0) (proc))
+        ((1) (proc (r->R ra)))
+        ((2) (proc (r->R ra) (r->R rb)))
+        ((3) (proc (r->R ra) (r->R rb) (r->R rc))))
+      (executor (add1 k) (AND A-mask (sub1 (PC)))))))
 
 (define (assemble source-code)
-  
   (unless (and (list? source-code) (andmap list? source-code))
-    (raise-argument-error 'assemble "listof instr" source-code))
-  
-  (when (show-source-code)
-    (printf " ~nSource code~n")
-    (for ((instr (in-list source-code))) (printf "~s~n" instr)))
-  
-  (define registers '(R0 R1 R2 R3 R4 R5 R6 #;SP))
-  (define R-hash (for/hasheq ((R (in-list registers)) (k (in-naturals))) (values R k)))
-  (define (R->r R) (hash-ref R-hash R))
+    (raise-argument-error 'assemble "(listof list?)" source-code))
+  (define (addr? a) (and (symbol? a) (not (memq a register-names))))
   (define addr-hash (make-hasheq))
-  (define (make-DATUM-instr datum) (list 'DATUM (and W-mask datum)))
-  
+  (define (datum? d) (or (addr? d) (INTEGER? d)))
   (define (set-addr! addr k)
-    (unless (and (symbol? addr) (not (memq addr registers)))
-      (error 'assemble "incorrect address: ~s" addr))
-    (when (hash-ref addr-hash addr #f)
-      (error 'assemble "duplicate address: ~s" addr))
+    (when (hash-ref addr-hash addr #f) (error 'assemble "duplicate address: ~s" addr))
     (hash-set! addr-hash addr k))
-  
-  (define (check-datum datum)
-    (unless
-      (or
-        (INTEGER? datum)
-        (and (symbol? datum) (not (memq datum registers))))
-      (error 'assemble "incorrect datum: ~s" datum)))
-  
-  (define (get-datum datum)
-    (cond
-      ((symbol? datum) (hash-ref addr-hash datum))
-      (else (D->W datum))))
-  
+  (define (get-datum a)
+    (if (INTEGER? a)
+      (AND D-mask a)
+      (hash-ref addr-hash a (λ () (error 'assemble "unknown datum: ~s" a)))))
+  (define (instr-error instr) (error 'assemble "incorrect instuction: ~s" instr))
   (define (assemble-phase1 k source-code)
     (cond
       ((null? source-code) '())
       (else
         (define instr (car source-code))
+        (define remaining-source-code (cdr source-code))
         (match instr
-          ((list ': rest ...) (assemble-phase1 k (cdr source-code)))
+          ((list ': comment ...)
+           (assemble-phase1 k remaining-source-code))
           ((list addr ': 'DATA data ...)
+           (unless (addr? addr) (instr-error instr))
            (set-addr! addr k)
            (append (map make-DATUM-instr data)
-             (assemble-phase1 (+ k (length data)) (cdr source-code))))
+             (assemble-phase1 (+ k (length data)) remaining-source-code)))
           ((list 'DATA data ...)
-           (unless (for-each check-datum data)
-             (error 'assemble "incorrect DATA: ~s" data))
            (append (map make-DATUM-instr data)
-             (assemble-phase1 (+ k (length data)) (cdr source-code))))
+             (assemble-phase1 (+ k (length data)) remaining-source-code)))
           ((list addr ': rest ...)
+           (unless (addr? addr) (instr-error instr))
            (set-addr! addr k)
-           (cons rest (assemble-phase1 (add1 k) (cdr source-code))))
+           (cons rest (assemble-phase1 (add1 k) remaining-source-code)))
           ((list rest ...)
-           (cons rest (assemble-phase1 (add1 k) (cdr source-code))))))))
-  
+           (cons rest (assemble-phase1 (add1 k) remaining-source-code)))))))
+  (define (make-DATUM-instr datum) (list 'DATUM datum))
   (define (assemble-phase2 k source-code)
-    (when (show-assembled-program) (printf " ~nAssembled program~n"))
+    (when (show-assembled-code) (printf "~nAssembled code~n"))
     (for ((instr (in-list source-code)) (k (in-naturals)))
-      (define i (assemble-instr instr))
-      (vector-set! memory k i)
-      (when (show-assembled-program)
-        (define-values (opc cc ra rb rc da) (decompose-instr i))
-        (printf "~a : ~a ~a ~a ~a ~a ~a : ~s~n"
-          (~h k 6)
-          (~h opc 2)
+      (define assembled-instr (assemble-instr instr))
+      (when (show-assembled-code)
+        (define-values (opcode cc ra rb rc da) (decompose-instr assembled-instr))
+        (printf "~a : ~a ~a ~a ~a ~a ~a~n"
+          (A-fmt-hex k)
+          (~h opcode 2)
           (~h cc 1)
           (~h ra 1)
           (~h rb 1)
           (~h rc 1)
-          (~h da 10)
-          (W-sign-extend i)))))
-
+          (~h da 10)))
+      (MEM-set! 'assembler k assembled-instr)))
   (define (assemble-instr instr)
-    (define (R? R) (memq R registers))
-    (define (check-R R) (unless (R? R) (instr-error)))
-    (define (instr-error) (error 'assembler "incorrect instruction: ~s" instr))
-    (define-values (opcode cc) (mnemonic->opcode/cc (car instr)))
-    (define (compose-ALU-instr Ra Rb (Rc #f))
-      (cond
-        (Rc
-          (check-R Ra) (check-R Rb) (check-R Rc)
-          (compose-instr opcode cc (R->r Ra) (R->r Rb) (R->r Rc) 0))
-        (else
-          (check-R Ra) (check-R Rb)
-          (compose-instr opcode cc (R->r Ra) (R->r Rb) 0 0))))
-    (define (compose-CMP-instr Ra Rb Rc)
-      (check-R Ra) (check-R Rb)
-      (if (R? Rc)
-        (compose-instr opcode cc (R->r Ra) (R->r Rb) (R->r Rc) 0)
-        (compose-instr opcode cc (R->r Ra) (R->r Rb) 8 (get-datum Rc))))
-    (define (compose-<>?-instr Ra Rb)
-      (check-R Ra)
-      (if (R? Rb)
-        (compose-instr opcode cc (R->r Ra) (R->r Rb) 0 0)
-        (compose-instr opcode cc (R->r Ra) 8 0 (get-datum Rb))))
-    
     (match instr
-      ((list 'DATUM datum) (if (symbol? datum) (hash-ref addr-hash datum) (mask-W datum)))
-      ((list 'STP) (compose-instr opcode cc 0 0 0 0))
-      ((list 'NOP) (compose-instr opcode cc 0 0 0 0))
-      ((list 'SET Ra Rb)
-       (check-R Ra)
-       (if (R? Rb)
+      ((list 'DATUM datum)
+       (unless (datum? datum) (instr-error instr))
+       (if (symbol? datum)
+         (hash-ref addr-hash datum (λ () (error 'DATUM "unknown address: ~s" datum)))
+         (AND W-mask datum)))
+      ((list M)
+       (define-values (opcode cc arity) (M->opcode/cc/form M))
+       (compose-instr opcode cc 0 0 0 0))
+      ((list M R)
+       (define-values (opcode cc arity) (M->opcode/cc/form M))
+       (if (memq R register-names)
+         (compose-instr opcode cc (R->r R) 0 0 0)
+         (compose-instr opcode cc 8        0 0 (get-datum R))))
+      ((list M Ra Rb)
+       (define-values (opcode cc arity) (M->opcode/cc/form M))
+       (if (memq Rb register-names)
          (compose-instr opcode cc (R->r Ra) (R->r Rb) 0 0)
-         (compose-instr opcode cc (R->r Ra) 8 0 (get-datum Rb))))
-      ((list 'ADD Ra Rb Rc) (compose-ALU-instr Ra Rb Rc))
-      ((list 'SUB Ra Rb Rc) (compose-ALU-instr Ra Rb Rc))
-      ((list 'MUL Ra Rb Rc) (compose-ALU-instr Ra Rb Rc))
-      ((list 'DIV Ra Rb Rc) (compose-ALU-instr Ra Rb Rc))
-      ((list 'AND Ra Rb Rc) (compose-ALU-instr Ra Rb Rc))
-      ((list 'IOR Ra Rb Rc) (compose-ALU-instr Ra Rb Rc))
-      ((list 'SHL Ra Rb Rc) (compose-ALU-instr Ra Rb Rc))
-      ((list 'SHR Ra Rb Rc) (compose-ALU-instr Ra Rb Rc))
-      ((list 'SHE Ra Rb Rc) (compose-ALU-instr Ra Rb Rc))
-      ((list 'NEG Ra Rb)    (compose-ALU-instr Ra Rb))
-      ((list 'NOT Ra Rb)    (compose-ALU-instr Ra Rb))
-      ((list 'EQ? Ra Rb Rc) (compose-CMP-instr Ra Rb Rc))
-      ((list 'LT? Ra Rb Rc) (compose-CMP-instr Ra Rb Rc))
-      ((list 'GT? Ra Rb Rc) (compose-CMP-instr Ra Rb Rc))
-      ((list 'LE? Ra Rb Rc) (compose-CMP-instr Ra Rb Rc))
-      ((list 'GE? Ra Rb Rc) (compose-CMP-instr Ra Rb Rc))
-      ((list '=0? Ra Rb)    (compose-<>?-instr Ra Rb))
-      ((list '<0? Ra Rb)    (compose-<>?-instr Ra Rb))
-      ((list '>0? Ra Rb)    (compose-<>?-instr Ra Rb))
-      ((list '≤0? Ra Rb)    (compose-<>?-instr Ra Rb))
-      ((list '≥0? Ra Rb)    (compose-<>?-instr Ra Rb))
-      ((list 'JMP Ra)
-       (if (R? Ra)
-         (compose-instr opcode cc (R->r Ra) 0 0 0)
-         (compose-instr opcode cc 8 0 0 (get-datum Ra))))
-      ((list 'PSH Ra)
-       (if (R? Ra)
-         (compose-instr opcode cc (R->r Ra) 0 0 0)
-         (compose-instr opcode cc 8 0 0 (get-datum Ra))))
-      ((list 'POP Ra)
-       (check-R Ra)
-       (compose-instr opcode cc (R->r Ra) 0 0 0))
-      ((list 'MRD Ra Rb)
-       (check-R Ra)
-       (if (R? Rb)
-         (compose-instr opcode cc (R->r Ra) (R->r Rb) 0 0)
-         (compose-instr opcode cc (R->r Ra) 8 0 (get-datum Rb))))
-      ((list 'MWR Ra Rb)
-       (check-R Ra)
-       (if (R? Rb)
-         (compose-instr opcode cc (R->r Ra) (R->r Rb) 0 0)
-         (compose-instr opcode cc (R->r Ra) 8 0 (get-datum Rb))))
-      ((list 'OUT Ra)
-       (if (R? Ra)
-         (compose-instr opcode cc (R->r Ra) 0 0 0)
-         (compose-instr opcode cc 8 0 0 (get-datum Ra))))
-      ((list 'INP Ra)
-       (check-R Ra)
-       (compose-instr #x0C #x0 (R->r Ra) 0 0 0))
-      ((list 'WRT Ra Rb)
-       (check-R Ra)
-       (if (R? Rb)
-         (compose-instr opcode cc (R->r Ra) (R->r Rb) 0 0)
-         (compose-instr opcode cc (R->r Ra) 8 0 (get-datum Rb))))
-      ((list 'RÆD Ra Rb)
-       (check-R Ra)
-       (if (R? Rb)
-         (compose-instr opcode cc (R->r Ra) (R->r Rb) 0 0)
-         (compose-instr opcode cc (R->r Ra) 8 0 (get-datum Rb))))
-      (else (instr-error))))
-  
-  (reset-memory)
+         (compose-instr opcode cc (R->r Ra) 8         0 (get-datum Rb))))
+      ((list M Ra Rb Rc)
+       (define-values (opcode cc arity) (M->opcode/cc/form M))
+       (if (memq Rc register-names)
+         (compose-instr opcode cc (R->r Ra) (R->r Rb) (R->r Rc) 0)
+         (compose-instr opcode cc (R->r Ra) (R->r Rb) 8 (get-datum Rc))))))
+  (MEM-reset)
+  (when (show-source-code)
+    (for ((instr (in-list source-code)) (k (in-naturals)))
+      (printf "~a : ~a~n" (A-fmt-hex k) instr)))
   (assemble-phase2 0 (assemble-phase1 0 source-code)))
 
-;═════════════════════════════════════════════════════════════════════════════════════════════════════
-#|
-TODO
-Allow strings of up to 8 ASCII characters (32 up to and including 126 as data)
-Convert them to words
-Add STR instruction to print a word as a string.
-|#
+(define (reset) (reset-registers) (MEM-reset))
 
+(reset)
+;; (for ((k (in-range 20))) (MEM-set! 'reset k #x0100000000000000))
+;; (MEM-set! 'aap 4 #x0201800000000010)
+;; (MEM-set! 'aap 5 #x0508fffffffffffe)
+;; (MEM-set! 'aap (sub1 A-mask) #x0100000000000000)
+;; (execute)
+;; 
+;; (execute '((SET R1 10) (a : SET R2 a) (ADD R3 R1 R2)))
+;; 
+;; (execute
+;;   '((SET R0 5)
+;;     (SET R1 1)
+;;     (SET R2 1)
+;;     (loop : =0? R0 end)
+;;     (MUL R1 R0 R1)
+;;     (SUB R0 R0 R2)
+;;     (JMP loop)
+;;     (end : OUT R1)))

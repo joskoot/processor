@@ -2,7 +2,7 @@
 
 (require "processor.rkt")
 
-(catch-exn #f)
+;(catch-exn #f)
 
 (define (printl . args)
   (display "\n════════════════════════════════════════════════════════════════════")
@@ -75,7 +75,7 @@
     (STP)
     (aap : DATUM #x111)))
 
-(print-memory 10)
+(print-memory 0 10)
 (newline)
 
 (printl "~n")
@@ -90,16 +90,16 @@
       (STP)
       (aap : DATUM #x111))))
 (newline)
-(print-memory 10)
+(print-memory 10 15)
 
 (printl "~n")
-(parameterize ((INP-port (open-input-string "1 2 3 4 5")) (show-instructions #f))
+(parameterize ((INP-port (open-input-string "1 2 3 4 5")))
   (execute
     '((SET R1 10) (SET R2 5) (RÆD R1 R2) (NOP)))
   (newline)
-  (print-memory 20))
+  (print-memory 10 20))
 
-(printl "~nSubroutine~n")
+(printl "~n")
 (execute
   '((MRD R1 aap)
     (MWR R1 noot)
@@ -108,6 +108,8 @@
     (STP)
     (aap : OUT R1)))
 (printl "~n")
+
+(printl "~nSubroutine~n")
 (parameterize ((INP-port (open-input-string "3")))
   (execute
     '((INP R0)
@@ -142,17 +144,17 @@
 (printl "~n")
 (execute '((NOP) (aap : DATA #x01F888FFFFFFFFFF aap)))
 
+(catch-exn #t)
+
 (printl "~n")
 (let ((op (open-output-string)))
-(parameterize ((max-nr-of-instrs 21) (OUT-port op))
-  (execute '((SET R1 -1) (SET R2 -1) (aap : OUT R2) (ADD R2 R2 R1) (JMP aap)))
-  (newline)
-  (display (get-output-string op))))
+  (parameterize ((max-nr-of-instrs 21) (OUT-port op))
+    (execute '((SET R1 -1) (SET R2 -1) (aap : OUT R2) (ADD R2 R2 R1) (JMP aap)))
+    (newline)
+    (display (get-output-string op))))
 
 (printl "~n")
 (execute '((SET R1 aap) (aap : DATA #x02021FFFFFFFFFFF aap)))
-
-(catch-exn #t)
 
 (printl "~n")
 (execute '((SET R1 aap) (aap : DATA #x03FFFFFFFFFFFFFF aap)))
