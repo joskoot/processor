@@ -1,1 +1,6 @@
-A simulator of a processor, assembler included
+A simulator of a processor, assembler included.\
+Words and addresses restrained to word cq address size.\
+The instruction set is defined in a table.
+Both the assembler and the simulator are driven by this table\
+No simulation of memory cashes or virtual memory.\
+Registsers, memory and other elements are simulated as though working sumultaneously.
