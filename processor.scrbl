@@ -264,68 +264,108 @@ If the datum is an exact integer it is truncated to its 40 lower significant bit
 Arithmetical operations are in two's complement. Overflow is ignored.
 
 @Tabular[
- ((@tt{(STP)} @roman{Halts the processor.})
-  (@tt{(NOP)} @roman{No operation.})
-  (@tt{(SET Ra Rb)} @roman{@tt{Ra} ← @tt{Rb}@period})
-  (@tt{(SET Ra datum)} @roman{@tt{Ra} ← @tt{datum} (sign extended).})
-  (@tt{(ADD Ra Rb Rc)} @roman{@tt{Ra} ← @tt{Rb+Rc}@period})
-  (@tt{(SUB Ra Rb Rc)} @roman{@tt{Ra} ← @tt{Rb}−Rc@period})
-  (@tt{(MUL Ra Rb Rc)} @roman{@tt{Ra} ← @tt{Rb}×@tt{Rc}@period})
-  (@tt{(DIV Ra Rb Rc)} @roman{@tt{Ra} ← @tt{Rb/Rc}, integer division@period})
-  (@tt{(SHL Ra Rb Rc)} @roman{Put Rb into Ra, but left shifted by Rc bits.})
-  (@tt{(SHR Ra Rb Rc)} @roman{Put Rb into Ra, but right shifted by Rc bits without sign extension.})
-  (@tt{(SHE Ra Rb Rc)} @roman{Put Rb into Ra, but right shifted by Rc bits and sign extended.})
-  (@tt{(NEG Ra Rb)} @roman{@tt{Ra} ← −@tt{Rb}@period})
-  (@tt{(AND Ra Rb Rc)} @roman{@tt{Ra} ← @tt{Rb˄Rc}, bitwise and.})
-  (@tt{(IOR Ra Rb Rc)} @roman{@tt{Ra} ← @tt{Rb˅Rc}, bitwise inclusive or.})
-  (@tt{(NOT Ra Rb)} @roman{@tt{Ra} ← @tt{@roman{¬}Rb}, bitwise not.})
-  (@tt{(JMP Ra)} @roman{Jump to @tt{Ra}@period})
-  (@tt{(JMP datum)} @roman{Jump to @tt{datum}@period})
-  (@tt{(=0? Ra Rb)} @roman{If @tt{Ra}=0 jump to @tt{Rb}                else go to next instruction.})
-  (@tt{(=0? Ra datum)} @roman{If @tt{Ra}=0 jump to @tt{datum}          else go to next instruction.})
-  (@tt{(<0? Ra Rb)} @roman{If @tt{Ra}<0 jump to @tt{Rb}                else go to next instruction.})
-  (@tt{(<0? Ra datum)} @roman{If @tt{Ra}<0 jump to @tt{datum}          else go to next instruction.})
-  (@tt{(>0? Ra Rb)} @roman{If @tt{Ra}>0 jump to @tt{Rb}                else go to next instruction.})
-  (@tt{(>0? Ra datum)} @roman{If @tt{Ra}>0 jump to @tt{datum}          else go to next instruction.})
-  (@tt{(≤0? Ra Rb)} @roman{If @tt{Ra}≤0 jump to @tt{Rb}                else go to next instruction.})
-  (@tt{(≤0? Ra datum)} @roman{If @tt{Ra}≤0 jump to @tt{datum}          else go to next instruction.})
-  (@tt{(≥0? Ra Rb)} @roman{If @tt{Ra}≥0 jump to @tt{Rb}                else go to next instruction.})
-  (@tt{(≥0? Ra datum)} @roman{If @tt{Ra}≥0 jump to @tt{datum}          else go to next instruction.})
-  (@tt{(EQ? Ra Rb Rc)} @roman{If @tt{Ra}=@tt{Rb} jump to @tt{Rc}       else go to next instruction.})
-  (@tt{(EQ? Ra Rb datum)} @roman{If @tt{Ra}=@tt{Rb} jump to @tt{datum} else go to next instruction.})
-  (@tt{(LT? Ra Rb Rc)} @roman{If @tt{Ra}<@tt{Rb} jump to @tt{Rc}       else go to next instruction.})
-  (@tt{(LT? Ra Rb datum)} @roman{If @tt{Ra}<@tt{Rb} jump to @tt{datum} else go to next instruction.})
-  (@tt{(GT? Ra Rb Rc)} @roman{If @tt{Ra}>@tt{Rb} jump to @tt{Rc}       else go to next instruction.})
-  (@tt{(GT? Ra Rb datum)} @roman{If @tt{Ra}>@tt{Rb} jump to @tt{datum} else go to next instruction.})
-  (@tt{(LE? Ra Rb Rc)} @roman{If @tt{Ra}≤@tt{Rb} jump to @tt{Rc}       else go to next instruction.})
-  (@tt{(LE? Ra Rb datum)} @roman{If @tt{Ra}≤@tt{Rb} jump to @tt{datum} else go to next instruction.})
-  (@tt{(GE? Ra Rb Rc)} @roman{If @tt{Ra}≥@tt{Rb} jump to @tt{Rc}       else go to next instruction.})
-  (@tt{(GE? Ra Rb datum)} @roman{If @tt{Ra}≥@tt{Rb} jump to @tt{datum} else go to next instruction.})
-  (@tt{(MRD Ra Rb)}
+ ((@nb{@tt{(STP)}} @roman{Halts the processor.})
+  (@nb{@tt{(NOP)}} @roman{No operation.})
+  (@nb{@tt{(SET Ra Rb)}} @roman{@tt{Ra} ← @tt{Rb}@period})
+  (@nb{@tt{(SET Ra datum)}} @roman{@tt{Ra} ← @tt{datum} (sign extended).})
+  (@nb{@tt{(ADD Ra Rb Rc)}} @roman{@tt{Ra} ← @tt{Rb+Rc}@period})
+  (@nb{@tt{(ADD Ra Rb datum)}} @roman{@tt{Ra} ← @tt{Rb+datum}@period})
+  (@nb{@tt{(SUB Ra Rb Rc)}} @roman{@tt{Ra} ← @tt{Rb}−@tt{Rc}@period})
+  (@nb{@tt{(SUB Ra Rb datum)}} @roman{@tt{Ra} ← @tt{Rb}−@tt{datum}@period})
+  (@nb{@tt{(MUL Ra Rb Rc)}} @roman{@tt{Ra} ← @tt{Rb}×@tt{Rc}@period})
+  (@nb{@tt{(MUL Ra Rb datum)}} @roman{@tt{Ra} ← @tt{Rb}×@tt{datum}@period})
+  (@nb{@tt{(DIV Ra Rb Rc)}} @roman{@tt{Ra} ← @tt{Rb/Rc}, integer division@period})
+  (@nb{@tt{(DIV Ra Rb datum)}} @roman{@tt{Ra} ← @tt{Rb/Rdatum},
+  integer division@period})
+  (@nb{@tt{(SHL Ra Rb Rc)}} @roman{Put @tt{Rb} into @tt{Ra},
+  left shifted by @tt{Rc} bits.})
+  (@nb{@tt{(SHL Ra Rb datum)}} @roman{Put @tt{Rb} into @tt{Ra},
+  left shifted by @tt{datum} bits.})
+  (@nb{@tt{(SHL Ra Rb datum)}} @roman{Put #tt{Rb} into @tt{Ra},
+  left shifted by @tt{datum} bits.})
+  (@nb{@tt{(SHR Ra Rb Rc)}} @roman{Put @tt{Rb} into @tt{Ra},
+  right shifted by @tt{Rc} bits without sign extension.})
+  (@nb{@tt{(SHR Ra Rb datum)}} @roman{Put @tt{Rb} into @tt{Ra},
+  but right shifted by @tt{datum} bits without sign extension.})
+  (@nb{@tt{(SHE Ra Rb Rc)}} @roman{Put @tt{Rb} into @tt{Ra},
+  right shifted by @tt{Rc} bits and sign extended.})
+  (@nb{@tt{(SHE Ra Rb datum)}} @roman{Put @tt{Rb} into @tt{Ra},
+  right shifted by @tt{datum} bits and sign extended.})
+  (@nb{@tt{(NEG Ra Rb)}} @roman{@tt{Ra} ← −@tt{Rb}@period})
+  (@nb{@tt{(NEG Ra datum)}} @roman{@tt{Ra} ← −@tt{datum}@period})
+  (@nb{@tt{(AND Ra Rb Rc)}} @roman{@tt{Ra} ← @tt{Rb˄Rc}, bitwise and.})
+  (@nb{@tt{(AND Ra Rb datum)}} @roman{@tt{Ra} ← @tt{Rb˄datum}, bitwise and.})
+  (@nb{@tt{(IOR Ra Rb Rc)}} @roman{@tt{Ra} ← @tt{Rb˅Rc}, bitwise inclusive or.})
+  (@nb{@tt{(IOR Ra Rb datum)}} @roman{@tt{Ra} ← @tt{Rb˅datum}, bitwise inclusive or.})
+  (@nb{@tt{(NOT Ra Rb)}} @roman{@tt{Ra} ← @tt{@roman{¬}Rb}, bitwise not.})
+  (@nb{@tt{(NOT Ra datum)}} @roman{@tt{Ra} ← @tt{@roman{¬}datum}, bitwise not.})
+  (@nb{@tt{(JMP Ra)}} @roman{Jump to @tt{Ra}@period})
+  (@nb{@tt{(JMP datum)}} @roman{Jump to @tt{datum}@period})
+  (@nb{@tt{(=0? Ra Rb)}} @roman{If @tt{Ra}=0 jump to @tt{Rb}
+  else go to next instruction.})
+  (@nb{@tt{(=0? Ra datum)}} @roman{If @tt{Ra}=0 jump to @tt{datum}
+  else go to next instruction.})
+  (@nb{@tt{(<0? Ra Rb)}} @roman{If @tt{Ra}<0 jump to @tt{Rb}
+  else go to next instruction.})
+  (@nb{@tt{(<0? Ra datum)}} @roman{If @tt{Ra}<0 jump to @tt{datum}
+  else go to next instruction.})
+  (@nb{@tt{(>0? Ra Rb)}} @roman{If @tt{Ra}>0 jump to @tt{Rb}
+  else go to next instruction.})
+  (@nb{@tt{(>0? Ra datum)}} @roman{If @tt{Ra}>0 jump to @tt{datum}
+  else go to next instruction.})
+  (@nb{@tt{(≤0? Ra Rb)}} @roman{If @tt{Ra}≤0 jump to @tt{Rb}
+  else go to next instruction.})
+  (@nb{@tt{(≤0? Ra datum)}} @roman{If @tt{Ra}≤0 jump to @tt{datum}
+  else go to next instruction.})
+  (@nb{@tt{(≥0? Ra Rb)}} @roman{If @tt{Ra}≥0 jump to @tt{Rb}
+  else go to next instruction.})
+  (@nb{@tt{(≥0? Ra datum)}} @roman{If @tt{Ra}≥0 jump to @tt{datum}
+  else go to next instruction.})
+  (@nb{@tt{(EQ? Ra Rb Rc)}} @roman{If @tt{Ra}=@tt{Rb} jump to @tt{Rc}
+  else go to next instruction.})
+  (@nb{@tt{(EQ? Ra Rb datum)}} @roman{If @tt{Ra}=@tt{Rb} jump to @tt{datum}
+  else go to next instruction.})
+  (@nb{@tt{(LT? Ra Rb Rc)}} @roman{If @tt{Ra}<@tt{Rb} jump to @tt{Rc}
+  else go to next instruction.})
+  (@nb{@tt{(LT? Ra Rb datum)}} @roman{If @tt{Ra}<@tt{Rb} jump to @tt{datum}
+  else go to next instruction.})
+  (@nb{@tt{(GT? Ra Rb Rc)}} @roman{If @tt{Ra}>@tt{Rb} jump to @tt{Rc}
+  else go to next instruction.})
+  (@nb{@tt{(GT? Ra Rb datum)}} @roman{If @tt{Ra}>@tt{Rb} jump to @tt{datum}
+  else go to next instruction.})
+  (@nb{@tt{(LE? Ra Rb Rc)}} @roman{If @tt{Ra}≤@tt{Rb} jump to @tt{Rc}
+  else go to next instruction.})
+  (@nb{@tt{(LE? Ra Rb datum)}} @roman{If @tt{Ra}≤@tt{Rb} jump to @tt{datum}
+  else go to next instruction.})
+  (@nb{@tt{(GE? Ra Rb Rc)}} @roman{If @tt{Ra}≥@tt{Rb} jump to @tt{Rc}
+  else go to next instruction.})
+  (@nb{@tt{(GE? Ra Rb datum)}} @roman{If @tt{Ra}≥@tt{Rb} jump to @tt{datum}
+  else go to next instruction.})
+  (@nb{@tt{(MRD Ra Rb)}}
     @roman{Read memory at addres @tt{Rb} and put the word in @tt{Ra}@period})
-  (@tt{(MRD Ra datum)}
+  (@nb{@tt{(MRD Ra datum)}}
     @roman{Read memory at addres @tt{datum} and put the word in @tt{Ra}@period})
-  (@tt{(MWR Ra Rb)} @roman{Write @tt{Ra} in memory at address @tt{Rb}@period})
-  (@tt{(MWR Ra datum)} @roman{Write @tt{Ra} in memory at address @tt{datum}@period})
-  (@tt{(PSH Ra)} @roman{Push @tt{Ra} onto the stack.})
-  (@tt{(PSH datum)} @roman{Push @tt{datum} onto the stack.})
-  (@tt{(POP Ra)} @roman{Pop a word from stack into @tt{Ra}@period})
-  (@tt{(OUT Ra)} @roman{Print @tt{Ra} on @nbr[OUT-port].})
-  (@tt{(OUT datum)} @roman{Print @tt{datum} on @nbr[OUT-port].})
-  (@tt{(INP Ra)} @roman{Reads a datum from @nbr[INP-port] and puts it in Ra.})
-  (@tt{(WRT Ra Rb)}
+  (@nb{@tt{(MWR Ra Rb)}} @roman{Write @tt{Ra} in memory at address @tt{Rb}@period})
+  (@nb{@tt{(MWR Ra datum)}} @roman{Write @tt{Ra} in memory at address @tt{datum}@period})
+  (@nb{@tt{(PSH Ra)}} @roman{Push @tt{Ra} onto the stack.})
+  (@nb{@tt{(PSH datum)}} @roman{Push @tt{datum} onto the stack.})
+  (@nb{@tt{(POP Ra)}} @roman{Pop a word from stack into @tt{Ra}@period})
+  (@nb{@tt{(OUT Ra)}} @roman{Print @tt{Ra} on @nbr[OUT-port].})
+  (@nb{@tt{(OUT datum)}} @roman{Print @tt{datum} on @nbr[OUT-port].})
+  (@nb{@tt{(INP Ra)}} @roman{Reads a datum from @nbr[INP-port] and puts it in Ra.})
+  (@nb{@tt{(WRT Ra Rb)}}
     @roman{Write words from memory at addresses from Ra to Ra+Rb})
-  (@tt{(WRT Ra datum)}
+  (@nb{@tt{(WRT Ra datum)}}
     @roman{Write words from memory at addresses from Ra to Ra+datum})
-  (@tt{(RÆD Ra Rb)}
+  (@nb{@tt{(RÆD Ra Rb)}}
     @roman{Read words into memory at addresses from Ra to Ra+Rb})
-  (@tt{(RÆD Ra datum)}
+  (@nb{@tt{(RÆD Ra datum)}}
     @roman{Read words into memory at addresses from Ra to Ra+datum})
-  (@tt{(DATUM datum)} @roman{Datum not ment to be executed as instruction.})
-  (@tt{(DATA datum ...)} @roman{Expanded to repeated @tt{DATUM}@period})
-  (@tt{(: @roman{comment} ...)} @roman{Ignored.}))
+  (@nb{@tt{(DATUM datum)}} @roman{Datum not ment to be executed as instruction.})
+  (@nb{@tt{(DATA datum ...)}} @roman{Expanded to repeated @tt{DATUM}@period})
+  (@nb{@tt{(: @roman{comment} ...)}} @roman{Ignored.}))
  #:sep (hspace 2)
- #:row-properties '(bottom)]
+ #:row-properties '(top top)]
 
 The @tt{PSH} and @tt{POP} instructions use the @tt{@bold{SP}} for addressing.
 When pushing, address @tt{@bold{SP}} is used and @tt{@bold{SP}} is decreased by one.
@@ -334,7 +374,11 @@ At the start of execution @tt{@bold{SP}} is 2@↑{24}−1.
 @tt{PSH} and @tt{POP} instructions should be balanced like parentheses.
 Instructions @tt{WRT} and @tt{RÆD} use direct access to memory.
 They take as many cycles as words read or written
-plus an additional cycle to read the next instruction. 
+plus an additional cycle to read the next instruction.
+@tt{SHL}, @tt{SHR} and @tt{SHE} take the shift counts as signed.
+A negative shift-count for @tt{SHL} effectively does @tt{SHR} and reversely.
+A negative shift count for @tt{SHE} effectively does @tt{SHL} without sign extension.
+and reversely.
                                                                  
 @section{Provided}
 
@@ -358,8 +402,8 @@ Before assembling the memory is cleared.}
 @defparam*[show-source-code ‹on/off› any/c boolean? #:value #t]{
  When this parameter is true, the @nbrl[assemble]{assembler} shows the program to be assembled.}
 
-@defparam*[show-assembled-code ‹on/off› any/c boolean? #:value #t]{
- When this parameter is true, the @nbrl[assemble]{assembler} shows the assembled program.}
+@defparam*[show-binary-code ‹on/off› any/c boolean? #:value #t]{
+ When this parameter is true, the @nbrl[assemble]{assembler} shows the assembled binary code.}
 
 @defparam[align ‹n› exact-nonnegative-integer? #:value 3]{
  In a print of the executed instructions as indicated by parameter @nbr[show-instructions],
@@ -377,6 +421,12 @@ Before assembling the memory is cleared.}
    ((INP-port (open-input-string "#x0123456789abcdef")))
    (execute '((INP R0) (NEG R1 R0))))]}
 
+@defparam*[catch-crash ‹yes/no› any/c boolean? #:value #f]{
+ In case of a crash procedure @nbr[execute]
+ prints a message on the @nbr[current-error-port] and halts by raising an exception.
+ If this parameter is set to a true value,
+ this exception is catched and procedure @nbr[execute] returns normally.}
+
 @defproc[(print-memory (‹n› exact-nonnegative-integer? 1000)) void?]{
  Prints the first @nbr[‹n›] words of memory.
  Usually does not print the stack. (See @nbr[memory]).
@@ -389,7 +439,7 @@ Before assembling the memory is cleared.}
 
  @Interaction[
  (parameterize
-   ((show-assembled-code #f)
+   ((show-binary-code #f)
     (show-source-code #f)
     (show-registers #f))
    (execute
@@ -411,7 +461,7 @@ Before assembling the memory is cleared.}
  @Interaction[
  (parameterize
    ((max-nr-of-instrs 5)
-    (show-assembled-code #f)
+    (show-binary-code #f)
     (show-source-code #f)
     (show-registers #f))
    (execute '((loop : JMP loop))))]}
@@ -423,7 +473,22 @@ Before assembling the memory is cleared.}
 @defproc[#:link-target? #f (Rx (‹arg› (or/c #f exact-integer? 'clock) #f))
          exact-nonnegative-integer?]{
  @nbpr{Rx} is one of the following:
- @inset{@deftogether[
+ @defproc[#:link-target? #f (Rx (‹arg› (or/c #f exact-integer? 'clock) #f))
+          exact-nonnegative-integer?]{
+  @nbpr{Rx} is one of the following:
+  @bold{@tt{R0}},
+  @bold{@tt{R1}},
+  @bold{@tt{R2}},
+  @bold{@tt{R3}},
+  @bold{@tt{R4}},
+  @bold{@tt{R5}},
+  @bold{@tt{R6}},
+  @bold{@tt{R7}},
+  @bold{@tt{SP}},
+  @bold{@tt{PC}} and
+  @bold{@tt{IR}}.}}
+@(parameterize ((current-output-port (open-output-nowhere)))
+   @deftogether[
  ((defidform #:kind "word register" R0)
   (defidform #:kind "word register" R1)
   (defidform #:kind "word register" R2)
@@ -431,20 +496,19 @@ Before assembling the memory is cleared.}
   (defidform #:kind "word register" R4)
   (defidform #:kind "word register" R5)
   (defidform #:kind "word register" R6)
-  (defidform #:kind "word register" R7)
   (defidform #:kind "address register" SP)
   (defidform #:kind "address register" PC)
-  (defidform #:kind "instruction register" IR))]}
+  (defidform #:kind "instruction register" IR))])
 
- When called with an integer, it stores the integer in its input without changing its output.
- The integer is truncated to its 64/24 lower significant bits in case of a word/address.
- When called with @nbr['clock], it copies its input to its output.
- In all cases the output is returned.
- Register @tt{@bold{Rx}} is printed as @tt{#<Rx:h...>} where each @tt{h} is an hexadecimal digit,
- 16 digits for a word and 6 digits for an address.
- @Interaction[
+When called with an integer, it stores the integer in its input without changing its output.
+The integer is truncated to its 64/24 lower significant bits in case of a word/address.
+When called with @nbr['clock], it copies its input to its output.
+In all cases the output is returned.
+Register @tt{@bold{Rx}} is printed as @tt{#<Rx:h...>} where each @tt{h} is an hexadecimal digit,
+16 digits for a word and 6 digits for an address.
+@Interaction[
  (list (R0 #xA ) (R0) (R0 'clock) R0)
- (list (R1 (R0)) (R1) (R1 'clock) R1)]}
+ (list (R1 (R0)) (R1) (R1 'clock) R1)]
 
 @section{Examples}
 
