@@ -289,8 +289,8 @@ Arithmetical operations are in two's complement. Overflow is ignored.
   left shifted by @tt{datum} bits.})
   (@nb{@tt{(SHR Ra Rb Rc)}} @roman{Put @tt{Rb} into @tt{Ra},
   right shifted by @tt{Rc} bits without sign extension.})
-  (@nb{@tt{(SHR Ra Rb datum)}} @roman{Put @tt{Rb} into @tt{Ra},
-  but right shifted by @tt{datum} bits without sign extension.})
+  (@nb{@tt{(SHR Ra Rb datum)}}
+    @roman{Put @tt{Rb} right shifted by @tt{datum} bits without sign extension into @tt{Ra}.})
   (@nb{@tt{(SHE Ra Rb Rc)}} @roman{Put @tt{Rb} into @tt{Ra},
   right shifted by @tt{Rc} bits and sign extended.})
   (@nb{@tt{(SHE Ra Rb datum)}} @roman{Put @tt{Rb} into @tt{Ra},
