@@ -15,8 +15,8 @@
 @title{A simulator of a computer processor}
 @author{Jacob J. A. Koot}
 
-@;@defmodule["processor.rkt" #:packages ()]
-@(defmodule processor/processor #:packages ())
+@defmodule["processor.rkt" #:packages ()]
+@;@(defmodule processor/processor #:packages ())
 
 @section{Introduction}
 
@@ -76,7 +76,8 @@ but would allow a larger address space.
 
 @section[#:tag "sec-instruction-register"]{The instruction register}
 
-Instruction register @tt{@bold{IR}} contains a word in which the following components are discerned.
+Instruction register @tt{@bold{IR}} contains a word in which the components
+listed below are discerned.
 Bits are counted from low to high significance starting from 0.
 The length of every component is a multiple of 4, even when less bits are required.
 This makes reading hexadecimally printed instructions easier. 
@@ -384,7 +385,8 @@ and reversely.
 @section{Provided}
 
 @defproc[(assemble (‹instrs› (listof instrs))) void?]{
- @nbsl["sec-assembler"]{Assembles} the instructions and puts them in memory starting from address 0.@(lb)
+ @nbsl["sec-assembler"]{Assembles}
+ the instructions and puts them in memory starting from address 0.@(lb)
  Before assembling the memory is cleared.}
 
 @defproc[(execute (‹instrs› (listof instrs) #f)) void?]{ 
