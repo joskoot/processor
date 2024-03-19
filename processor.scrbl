@@ -58,19 +58,20 @@ Memory caches, memory banking and virtual memory are not simulated.
   (@nbsl["sec-memory"]{Memory}
     @roman{Contains 2@↑{24} words.})
   (@nbsl["sec-alu"]{@tt{@bold{ALU}}} @roman{Arithmetic unit.})
-  (@nbsl["sec-cmp"]{@tt{@bold{CMP}}} @roman{Arithmetic comparison unit.})
+  (@nbsl["sec-cmp"]{@tt{@bold{CMP}}} @roman{Arithmetic comparison unit, used for conditional jumps.})
   (@tt{@bold{IR}} @roman{Instruction register.}))
  #:sep (hspace 2)
  #:row-properties '((top top-border bottom-border) (top bottom-border))]
 
 It would be nice to have a memory of more than 2@↑{24} words.
-In principle 24 can be increased to 40,
-but as the simulator keeps memory in a vector
+In principle 24 can be increased to 40
+resulting in an address space of a little bit more than one Tera word or 8TB,
+but as the simulator keeps memory in a vector,
 this makes the @nbrl[assemble]{assembler} and procedure @nbr[execute] use more words
 than acceptable for DrRacket or Racket
 or available in your computer.
 Memory caches and banking would slow down the simulation.
-Virtual memory in a file would slow down too,
+Virtual memory in a file with a limited number of pages in RAM would slow down too,
 but would allow a larger address space.
 
 @section[#:tag "sec-instruction-register"]{The instruction register}
@@ -248,7 +249,7 @@ always to points to the memory word following the word from which the last instr
 
 @section[#:tag "sec-assembler"]{Assembler}
 
-‘@tt{Ra}’, ‘@tt{Rb}’ and ‘@tt{Rb}’ are register designators: @tt{R0} .. @tt{R7}@period @(lb)
+‘@tt{Ra}’, ‘@tt{Rb}’ and ‘@tt{Rb}’ are register designators: @tt{R0} to @tt{R7}@period @(lb)
 An instruction has the form
 @inset{@tt{(opcode-mnemonic etc ...)}}
 It may be given a name for its address by writing
@@ -382,9 +383,9 @@ and reversely.
                                                                  
 @section{Provided}
 
-@defproc[(assemble (‹instrs› (listof instrs))) void?]
-Assembles the instructions and puts them in memory starting from address 0.@(lb)
-Before assembling the memory is cleared.}
+@defproc[(assemble (‹instrs› (listof instrs))) void?]{
+ @nbsl["sec-assembler"]{Assembles} the instructions and puts them in memory starting from address 0.@(lb)
+ Before assembling the memory is cleared.}
 
 @defproc[(execute (‹instrs› (listof instrs) #f)) void?]{ 
  Resets all registers and executes the program currently in memory starting at address 0.
@@ -392,12 +393,12 @@ Before assembling the memory is cleared.}
 
 @defparam*[show-instructions ‹on/off› any/c boolean? #:value #t]{
  When this parameter is true, procedure @nbr[execute] prints all executed instructions:
- @inset{@tt{line-nr instr-address mnemonic opcode cc Ra Rb Rc datum cycle-count}}
+ @inset{@tt{line-nr address mnemonic opcode cc ra rb rc datum cycle-count}}
  The elements are printed in hexadecimal form, the line-nr, mnemonic and cycle-count excepted.}
 
 @defparam*[show-registers ‹on/off› any/c boolean? #:value #t]{
  When this parameter is true, procedure @nbr[execute] shows the contents
- of  registers after completion of the program.}
+ of registers after completion of the program.}
 
 @defparam*[show-source-code ‹on/off› any/c boolean? #:value #t]{
  When this parameter is true, the @nbrl[assemble]{assembler} shows the program to be assembled.}
@@ -470,25 +471,13 @@ Before assembling the memory is cleared.}
  Resets memory and registers.}
 
 @Elemtag{Rx}
-@defproc[#:link-target? #f (Rx (‹arg› (or/c #f exact-integer? 'clock) #f))
+@defproc[(Rx (‹arg› (or/c #f exact-integer? 'clock) #f))
          exact-nonnegative-integer?]{
  @nbpr{Rx} is one of the following:
  @defproc[#:link-target? #f (Rx (‹arg› (or/c #f exact-integer? 'clock) #f))
           exact-nonnegative-integer?]{
-  @nbpr{Rx} is one of the following:
-  @bold{@tt{R0}},
-  @bold{@tt{R1}},
-  @bold{@tt{R2}},
-  @bold{@tt{R3}},
-  @bold{@tt{R4}},
-  @bold{@tt{R5}},
-  @bold{@tt{R6}},
-  @bold{@tt{R7}},
-  @bold{@tt{SP}},
-  @bold{@tt{PC}} and
-  @bold{@tt{IR}}.}}
-@(parameterize ((current-output-port (open-output-nowhere)))
-   @deftogether[
+  @nbpr{Rx} is one of the following:}}
+@inset{@deftogether[
  ((defidform #:kind "word register" R0)
   (defidform #:kind "word register" R1)
   (defidform #:kind "word register" R2)
@@ -496,9 +485,10 @@ Before assembling the memory is cleared.}
   (defidform #:kind "word register" R4)
   (defidform #:kind "word register" R5)
   (defidform #:kind "word register" R6)
+  (defidform #:kind "word register" R7)
   (defidform #:kind "address register" SP)
   (defidform #:kind "address register" PC)
-  (defidform #:kind "instruction register" IR))])
+  (defidform #:kind "instruction register" IR))]}
 
 When called with an integer, it stores the integer in its input without changing its output.
 The integer is truncated to its 64/24 lower significant bits in case of a word/address.
