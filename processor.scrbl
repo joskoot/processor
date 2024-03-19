@@ -197,7 +197,7 @@ Circuits are not clocked. They provide their outputs without waiting for clock-d
 
 @section[#:tag "sec-busses"]{Busses}
 
-Virtually, the simulated processor does nothing else than clocking buffers between
+Virtually, the simulated processor does nothing else than clocking busses between
 registers, circuits, memory and the input and output controller.
 There are fifteen busses, three switchable ones and twelve fixed ones.
 They can transfer their signals simultaneously during the same clock cycle.
