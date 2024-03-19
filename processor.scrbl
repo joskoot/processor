@@ -15,8 +15,8 @@
 @title{A simulator of a computer processor}
 @author{Jacob J. A. Koot}
 
-@;@defmodule["processor.rkt" #:packages ()]
-@(defmodule processor/processor #:packages ())
+@defmodule["processor.rkt" #:packages ()]
+@;@(defmodule processor/processor #:packages ())
 
 @section{Introduction}
 
@@ -71,7 +71,9 @@ this makes the @nbrl[assemble]{assembler} and procedure @nbr[execute] use more w
 than acceptable for DrRacket or Racket
 or available in your computer.
 Memory caches and banking would slow down the simulation.
-Virtual memory in a file with a limited number of pages in RAM would slow down too,
+Virtual memory in a file with a limited number of pages in RAM
+would slow down the simulation too,
+even without page faults,
 but would allow a larger address space.
 
 @section[#:tag "sec-instruction-register"]{The instruction register}
