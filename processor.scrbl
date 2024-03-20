@@ -266,6 +266,7 @@ This implies that a colon cannot be used as address.
 ‘@tt{datum}’ denotes a datum in the form of an exact integer or an @tt{address}@period
 If the datum is an exact integer it is truncated to its 40 lower significant bits.
 Arithmetical operations are in two's complement. Overflow is ignored.
+‘@tt{word}’ denotes an exact integer. It is truncated to its 64 lower significant bits.
 
 @Tabular[
  ((@nb{@tt{(STP)}} @roman{Halts the processor.})
@@ -284,8 +285,6 @@ Arithmetical operations are in two's complement. Overflow is ignored.
   (@nb{@tt{(SHL Ra Rb Rc)}} @roman{Put @tt{Rb} into @tt{Ra},
   left shifted by @tt{Rc} bits.})
   (@nb{@tt{(SHL Ra Rb datum)}} @roman{Put @tt{Rb} into @tt{Ra},
-  left shifted by @tt{datum} bits.})
-  (@nb{@tt{(SHL Ra Rb datum)}} @roman{Put #tt{Rb} into @tt{Ra},
   left shifted by @tt{datum} bits.})
   (@nb{@tt{(SHR Ra Rb Rc)}} @roman{Put @tt{Rb} into @tt{Ra},
   right shifted by @tt{Rc} bits without sign extension.})
@@ -358,15 +357,16 @@ Arithmetical operations are in two's complement. Overflow is ignored.
   (@nb{@tt{(OUT datum)}} @roman{Print @tt{datum} on @nbr[OUT-port].})
   (@nb{@tt{(INP Ra)}} @roman{Reads a datum from @nbr[INP-port] and puts it in Ra.})
   (@nb{@tt{(WRT Ra Rb)}}
-    @roman{Write words from memory at addresses from Ra to Ra+Rb})
+    @roman{Write words from memory at addresses from Ra .. Ra+Rb})
   (@nb{@tt{(WRT Ra datum)}}
-    @roman{Write words from memory at addresses from Ra to Ra+datum})
+    @roman{Write words from memory at addresses from Ra .. Ra+datum})
   (@nb{@tt{(RÆD Ra Rb)}}
-    @roman{Read words into memory at addresses from Ra to Ra+Rb})
+    @roman{Read words into memory at addresses from Ra .. Ra+Rb})
   (@nb{@tt{(RÆD Ra datum)}}
-    @roman{Read words into memory at addresses from Ra to Ra+datum})
-  (@nb{@tt{(DATUM datum)}} @roman{Datum not ment to be executed as instruction.})
-  (@nb{@tt{(DATA datum ...)}} @roman{Expanded to repeated @tt{DATUM}@period})
+    @roman{Read words into memory at addresses from Ra .. Ra+datum})
+  (@nb{@tt{(DATUM word)}} @roman{Word not ment to be executed as instruction.})
+  (@nb{@tt{(DATUM address)}} @roman{Word not ment to be executed as instruction.})
+  (@nb{@tt{(DATA word/address ...)}} @roman{Expanded to repeated @tt{DATUM}@period})
   (@nb{@tt{(: @roman{comment} ...)}} @roman{Ignored.}))
  #:sep (hspace 2)
  #:row-properties '(top top)]
@@ -381,8 +381,7 @@ They take as many cycles as words read or written
 plus an additional cycle to read the next instruction.
 @tt{SHL}, @tt{SHR} and @tt{SHE} take the shift counts as signed.
 A negative shift-count for @tt{SHL} effectively does @tt{SHR} and reversely.
-A negative shift count for @tt{SHE} effectively does @tt{SHL} without sign extension.
-and reversely.
+A negative shift count for @tt{SHE} effectively does @tt{SHL} without sign extension and reversely.
                                                                  
 @section{Provided}
 
@@ -432,15 +431,13 @@ and reversely.
  If this parameter is set to a true value,
  this exception is catched and procedure @nbr[execute] returns normally.}
 
-@defproc[(print-memory (‹n› exact-nonnegative-integer? 1000)) void?]{
- Prints the first @nbr[‹n›] words of memory.
- Usually does not print the stack. (See @nbr[memory]).
- @nb{Does not} print words followed by zeros only.
- Each word is preceded by its hexadecimal and @nbrl[align]{aligned} address.}
+@defproc[(print-memory (‹n› exact-nonnegative-integer?) (‹m› exact-nonnegative-integer?)) void?]{
+ Prints words @nbr[‹n›]..@nbr[‹n›]+@nbr[‹m›] of memory.
+ Each word is preceded by its hexadecimal address.}
 
 @defproc[(print-stack (‹n› exact-nonnegative-integer?)) void?]{
  Shows the last @nbr[‹n›] words of memory, where the stack is located.
- Each word is preceded by its hexadecimal and @nbrl[align]{aligned} address.
+ Each word is preceded by its hexadecimal address.
 
  @Interaction[
  (parameterize
