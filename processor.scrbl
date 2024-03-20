@@ -389,7 +389,7 @@ A negative shift count for @tt{SHE} effectively does @tt{SHL} without sign exten
  the instructions and puts them in memory starting from address 0.@(lb)
  Before assembling the memory is cleared.}
 
-@defproc[(execute (‹instrs› (or/c #f #, @nbsl["sec-assembler"]{instructions}) #f)) void?]{ 
+@defproc[(execute (‹instrs› (or/c #f (listof #, @nbsl["sec-assembler"]{instructions})) #f)) void?]{ 
  Resets all registers and executes the program currently in memory starting at address 0.
  @nb{If @nbr[‹instrs›]} is a list of instructions, the @nbrl[assemble]{assembler} is called first.}
 
