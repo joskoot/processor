@@ -481,7 +481,7 @@ A negative shift count for @tt{SHE} effectively does @tt{SHL} without sign exten
  (print-stack 5)]}
 
 @defproc[(print-registers) void?]{
- Prints registers @nbr[R0] .. @nbr[R7],
+ Prints registers @nbr[R0] to @nbr[R7],
  @nbr[SP] and @nbr[PC].}
 
 @defparam[max-nr-of-instrs ‹n› exact-nonnegative-integer? #:value 1000]{
