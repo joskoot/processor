@@ -15,8 +15,8 @@
 @title{A simulator of a computer processor}
 @author{Jacob J. A. Koot}
 
-@;@defmodule["processor.rkt" #:packages ()]
-@(defmodule processor/processor #:packages ())
+@defmodule["processor.rkt" #:packages ()]
+@;@(defmodule processor/processor #:packages ())
 
 @section{Introduction}
 
@@ -384,32 +384,49 @@ A negative shift count for @tt{SHE} effectively does @tt{SHL} without sign exten
                                                                  
 @section{Provided}
 
-@defproc[(assemble (‹instrs› (listof instrs))) void?]{
+@defproc[(assemble (‹instrs› (listof #, @nbsl["sec-assembler"]{instructions}))) void?]{
  @nbsl["sec-assembler"]{Assembles}
  the instructions and puts them in memory starting from address 0.@(lb)
  Before assembling the memory is cleared.}
 
-@defproc[(execute (‹instrs› (listof instrs) #f)) void?]{ 
+@defproc[(execute (‹instrs› (or/c #f #, @nbsl["sec-assembler"]{instructions}) #f)) void?]{ 
  Resets all registers and executes the program currently in memory starting at address 0.
- @nb{If @nbr[‹instr›]} is a list of instructions, the @nbrl[assemble]{assembler} is called first.}
+ @nb{If @nbr[‹instrs›]} is a list of instructions, the @nbrl[assemble]{assembler} is called first.}
 
-@defparam*[show-instructions ‹on/off› any/c boolean? #:value #t]{
- When this parameter is true, procedure @nbr[execute] prints all executed instructions:
+@defparam*[show ‹options›
+ (or/c #f 'all
+   (listof
+     'source-code
+     'binary-code
+     'instructions
+     'registers))
+ (listof
+   'source-code
+   'binary-code
+   'instructions
+   'registers)
+ #:value 'all]{
+ @nbr[(show 'all)] activates all options.@(lb)
+ @nbr[(show #f)] and @nbr[(show '())] disable all options.
+
+ When this parameter contains @nbr['source-code],@(lb)
+ the @nbrl[assemble]{assembler} shows the program to be assembled.
+ 
+ When this parameter contains @nbr['binary-code],@(lb)
+ procedure @nbr[assemble] shows the assembled binary code.
+
+ When this parameter contains @nbr['instructions],@(lb)
+ procedure @nbr[execute] prints all executed instructions:
  @inset{@tt{line-nr address mnemonic opcode cc ra rb rc datum cycle-count}}
- The elements are printed in hexadecimal form, the line-nr, mnemonic and cycle-count excepted.}
+ The elements are printed in hexadecimal form,@(lb)
+ the line-nr, mnemonic and cycle-count excepted.
 
-@defparam*[show-registers ‹on/off› any/c boolean? #:value #t]{
- When this parameter is true, procedure @nbr[execute] shows the contents
+ When this parameter contains @nbr['registers],@(lb)
+ procedure @nbr[execute] shows the contents
  of registers after completion of the program.}
 
-@defparam*[show-source-code ‹on/off› any/c boolean? #:value #t]{
- When this parameter is true, the @nbrl[assemble]{assembler} shows the program to be assembled.}
-
-@defparam*[show-binary-code ‹on/off› any/c boolean? #:value #t]{
- When this parameter is true, the @nbrl[assemble]{assembler} shows the assembled binary code.}
-
 @defparam[align ‹n› exact-nonnegative-integer? #:value 3]{
- In a print of the executed instructions as indicated by parameter @nbr[show-instructions],
+ In a print of the executed instructions as indicated by parameter @nbr[show],
  each line begins with a line number.
  This number is right aligned in a field of @tt{(@nbr[align])} digits.
  Line numbers requiring more digits are not truncated.}
@@ -422,7 +439,18 @@ A negative shift count for @tt{SHE} effectively does @tt{SHL} without sign exten
  @Interaction[
  (parameterize
    ((INP-port (open-input-string "#x0123456789abcdef")))
-   (execute '((INP R0) (NEG R1 R0))))]}
+   (execute '((INP R0) (NOT R1 R0))))]
+ @Interaction[
+ (show '(instructions))
+ (INP-port (open-input-string "1 2 3 4 5"))
+ (assemble
+   '((SET R0 data)
+     (RÆD R0 5)
+     (STP)
+     (data : DATA)))
+ (print-memory 3 5)
+ (execute)
+ (print-memory 3 5)]}
 
 @defparam*[catch-crash ‹yes/no› any/c boolean? #:value #f]{
  In case of a crash procedure @nbr[execute]
@@ -439,10 +467,7 @@ A negative shift count for @tt{SHE} effectively does @tt{SHL} without sign exten
  Each word is preceded by its hexadecimal address.
 
  @Interaction[
- (parameterize
-   ((show-binary-code #f)
-    (show-source-code #f)
-    (show-registers #f))
+ (parameterize ((show #f))
    (execute
      '((PSH 1)
        (PSH 2)
@@ -455,39 +480,36 @@ A negative shift count for @tt{SHE} effectively does @tt{SHL} without sign exten
        (OUT R3))))
  (print-stack 5)]}
 
+@defproc[(print-registers) void?]{
+ Prints registers @nbr[R0] .. @nbr[R7],
+ @nbr[SP] and @nbr[PC].}
+
 @defparam[max-nr-of-instrs ‹n› exact-nonnegative-integer? #:value 1000]{
  Puts a limit on the number of instructions to be executed by procedure @nbr[execute].@(lb)
  The procedure halts when the limit is exceeded.
 
  @Interaction[
- (parameterize
-   ((max-nr-of-instrs 5)
-    (show-binary-code #f)
-    (show-source-code #f)
-    (show-registers #f))
+ (parameterize ((max-nr-of-instrs 5) (show '(instructions)))
    (execute '((loop : JMP loop))))]}
 
 @defproc[(reset) void?]{
  Resets memory and registers.}
 
 @Elemtag{Rx}
-@defproc[(Rx (‹arg› (or/c #f exact-integer? 'clock) #f))
+@defproc[#:link-target? #f (Rx (‹arg› (or/c #f exact-integer? 'clock) #f))
          exact-nonnegative-integer?]{
- @nbpr{Rx} is one of the following:
- @defproc[#:link-target? #f (Rx (‹arg› (or/c #f exact-integer? 'clock) #f))
-          exact-nonnegative-integer?]{
-  @nbpr{Rx} is one of the following:}}
+ @nbpr{Rx} is one of the following:}
 @inset{@deftogether[
- ((defidform #:kind "word register" R0)
-  (defidform #:kind "word register" R1)
-  (defidform #:kind "word register" R2)
-  (defidform #:kind "word register" R3)
-  (defidform #:kind "word register" R4)
-  (defidform #:kind "word register" R5)
-  (defidform #:kind "word register" R6)
-  (defidform #:kind "word register" R7)
-  (defidform #:kind "address register" SP)
-  (defidform #:kind "address register" PC)
+ ((defidform #:kind "general purpose word register" R0)
+  (defidform #:kind "general purpose word register" R1)
+  (defidform #:kind "general purpose word register" R2)
+  (defidform #:kind "general purpose word register" R3)
+  (defidform #:kind "general purpose word register" R4)
+  (defidform #:kind "general purpose word register" R5)
+  (defidform #:kind "general purpose word register" R6)
+  (defidform #:kind "general purpose word register" R7)
+  (defidform #:kind "address register, stack pointer" SP)
+  (defidform #:kind "address register, program counter" PC)
   (defidform #:kind "instruction register" IR))]}
 
 When called with an integer, it stores the integer in its input without changing its output.

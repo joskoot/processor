@@ -50,7 +50,7 @@
 (execute '((=0? R0 aap) (OUT 12345) (aap : STP)))
 
 (printl "")
-(execute '((OUT R0)))
+(execute '((OUT R0) (aap : OUT aap)))
 
 (printl "")
 (parameterize ((INP-port (open-input-string "123"))) (execute '((INP R0) (OUT R0))))
@@ -74,11 +74,7 @@
 (print-memory 0 10)
 
 (printl "Check MRD and MWR~n")
-(parameterize
-  ((show-instructions #f)
-   (show-registers #f)
-   (show-binary-code #f)
-   (show-source-code #f))
+(parameterize ((show #f))
   (execute
     '((SET R1 1)
       (SET R2 aap)

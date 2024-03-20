@@ -7,10 +7,7 @@
   assemble
   INP-port
   OUT-port
-  show-source-code
-  show-binary-code
-  show-instructions
-  show-registers
+  show
   print-registers
   print-memory
   print-stack
@@ -19,7 +16,7 @@
   catch-crash
   R0 R1 R2 R3 R4 R5 R6 R7 SP PC IR)
 
-(require (only-in racket ~r natural? match flatten))
+(require (only-in racket ~r natural? match flatten remove-duplicates))
 
 (define INTEGER? exact-integer?)
 (define AND bitwise-and)
@@ -46,12 +43,23 @@
   (unless (natural? n) (raise-argument-error 'max-nr-of-instrs "natural?" n))
   n)
 
+(define all-show-options '(source-code binary-code instructions registers))
+
+(define (show-guard x)
+  (cond
+    ((not x) '())
+    ((eq? x 'all) (all-show-options))
+    ((and (list? x) (null? (remove* all-show-options x))) (remove-duplicates x))))
+
+(define show (make-parameter all-show-options show-guard 'show))
+
+(define (show-binary-code) (memq 'binary-code (show)))
+(define (show-source-code) (memq 'source-code (show)))
+(define (show-instructions) (memq 'instructions (show)))
+(define (show-registers) (memq 'registers (show)))
+
 (define OUT-port (make-parameter (current-output-port) OUT-port-guard 'OUT-port))
 (define INP-port (make-parameter (current-input-port) INP-port-guard 'INP-port))
-(define show-binary-code (make-parameter #t force-bool 'show-binary-code))
-(define show-source-code (make-parameter #t force-bool 'show-source-code))
-(define show-instructions (make-parameter #t force-bool 'show-instructions))
-(define show-registers (make-parameter #t force-bool 'show-registers))
 (define align (make-parameter 3 align-guard 'alugn))
 (define catch-crash (make-parameter #f force-bool 'catch-crash))
 (define max-nr-of-instrs (make-parameter 1000 max-nr-of-instrs-guard 'max-nr-of-instrs))
@@ -352,18 +360,19 @@
     (AND D-mask instr)))    
 
 (define (execute (source-code #f))
+  (define (handler exn) (displayln (exn-message exn) (current-error-port)))
   (when source-code (assemble source-code))
   (reset-registers)
   (set! cycle-count 0)
   (printf "~nExecuting~n")
   (cond
     ((catch-crash)
-     (with-handlers ((exn:fail? (λ (exn) (displayln (exn-message exn) (current-error-port)))))
+     (with-handlers ((exn:fail? handler))
        (next-instr) (executor 0 0)))
     (else (next-instr) (executor 0 0))))
 
 (define (executor k pc)
-  (when (> k (max-nr-of-instrs)) (error 'execute "max nr of instrs exceeded: ~s" k))
+  (when (> k (max-nr-of-instrs)) (error 'execute "max nr of instrs exceeded: ~s" (max-nr-of-instrs)))
   (define-values (opcode cc ra rb rc da) (decompose-instr (IR)))
   (define-values (M proc) (opcode/cc->M/proc opcode cc))
   (when (show-instructions)
