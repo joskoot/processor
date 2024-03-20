@@ -14,6 +14,7 @@
   align
   max-nr-of-instrs
   catch-crash
+  clock
   R0 R1 R2 R3 R4 R5 R6 R7 SP PC IR)
 
 (require (only-in racket ~r natural? match flatten remove-duplicates))

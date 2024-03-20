@@ -512,15 +512,21 @@ A negative shift count for @tt{SHE} effectively does @tt{SHL} without sign exten
   (defidform #:kind "address register, program counter" PC)
   (defidform #:kind "instruction register" IR))]}
 
-When called with an integer, it stores the integer in its input without changing its output.
+hen called with an integer, it stores the integer in its input without changing its output.
 The integer is truncated to its 64/24 lower significant bits in case of a word/address.
 When called with @nbr['clock], it copies its input to its output.
 In all cases the output is returned.
 Register @tt{@bold{Rx}} is printed as @tt{#<Rx:h...>} where each @tt{h} is an hexadecimal digit,
 16 digits for a word and 6 digits for an address.
+
+@defform[(clock (‹R› ‹value›) ...)]{
+ Same as @nbr[(begin (‹R› ‹value›) ... (‹R› 'clock) ...)]}
+
 @Interaction[
- (list (R0 #xA ) (R0) (R0 'clock) R0)
- (list (R1 (R0)) (R1) (R1 'clock) R1)]
+ (void (clock (R0 #xA ) (PC -10)))
+ (list R0 PC)
+ (void (clock (R1 (R0))))
+ R1]
 
 @section{Examples}
 
@@ -573,25 +579,31 @@ R4 : 1 for decrementing R0
 
 @subsection{Subroutine call}
 
-Computes 2j+1 reading j from the @nbr[INP-port].
+A subroutine j → 2j+1.
+j is read from the @nbr[INP-port],@(lb)
+the subroutine is called and the result printed.
 
 @Interaction[
- (parameterize ((INP-port (open-input-string "3")))
+ (parameterize ((INP-port (open-input-string "3")) (show '(instructions)))
    (execute
-     '((INP R0)
+     '((: Read j into R0)
+       (INP R0)
+       (: call the subroutine)
        (PSH R0)
        (PSH return)
        (JMP subroutine)
+       (: Upon return fetch the result and print ir)
        (return : POP R0)
        (OUT R0)
        (STP)
-       (subroutine : POP R5) (: return address)
-       (POP R6) (: j)
+       (subroutine : POP R5) (: fetch return address)
+       (POP R6) (: fetch j)
        (SET R1 1)
        (SET R2 2)
        (MUL R6 R6 R2)
        (ADD R6 R6 R1)
-       (PSH R6) (JMP R5) (: return 2j+1))))
+       (: fetch 2j+1 from R6 and return it via the stack)
+       (PSH R6) (JMP R5))))
  (print-stack 5)]
 
 @subsection{Self-modification}
