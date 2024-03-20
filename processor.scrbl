@@ -265,8 +265,8 @@ This implies that a colon cannot be used as address.
 @nb{All elements} of an instruction must be separated by blank space.
 ‘@tt{datum}’ denotes a datum in the form of an exact integer or an @tt{address}@period
 If the datum is an exact integer it is truncated to its 40 lower significant bits.
+When occurring in a @tt{DATUM} declaration it is truncated to the 64 lower significant bits.
 Arithmetical operations are in two's complement. Overflow is ignored.
-‘@tt{word}’ denotes an exact integer. It is truncated to its 64 lower significant bits.
 
 @Tabular[
  ((@nb{@tt{(STP)}} @roman{Halts the processor.})
@@ -364,9 +364,8 @@ Arithmetical operations are in two's complement. Overflow is ignored.
     @roman{Read words into memory at addresses from Ra .. Ra+Rb})
   (@nb{@tt{(RÆD Ra datum)}}
     @roman{Read words into memory at addresses from Ra .. Ra+datum})
-  (@nb{@tt{(DATUM word)}} @roman{Word not ment to be executed as instruction.})
-  (@nb{@tt{(DATUM address)}} @roman{Word not ment to be executed as instruction.})
-  (@nb{@tt{(DATA word/address ...)}} @roman{Expanded to repeated @tt{DATUM}@period})
+  (@nb{@tt{(DATUM datum)}} @roman{Not ment to be executed as instruction.})
+  (@nb{@tt{(DATA datum ...)}} @roman{Expanded to repeated @tt{DATUM}@period})
   (@nb{@tt{(: @roman{comment} ...)}} @roman{Ignored.}))
  #:sep (hspace 2)
  #:row-properties '(top top)]
