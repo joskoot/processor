@@ -32,7 +32,12 @@ plus an additional cycle to read the next instruction.
 In fact a program takes exactly as many cycles as
 the number of words transferred from or to memory.
 Memory caches, memory banking and virtual memory are not simulated.
+The instruction set is defined in a table.
+Both the @nbrl[assemble]{assembler} and the
+@nbrl[execute]{simulator} are driven by this table.
 
+@racket[
+]
 @Tabular[
  (("Notation" " ")
   ("n .. m" ": from n up to but not including m.")
