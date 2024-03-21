@@ -19,6 +19,20 @@
 @(print-reader-abbreviations #f)
 @(print-as-expression #f)
 
+@(define-for-syntax local #f)
+
+@(define-syntax (nbhll stx)
+   (syntax-case stx ()
+     ((_ x y ...)
+      (if local
+        #'(nb (hyperlink x y ...))
+        #'(nb (hyperlink (string-append "../../" x) y ...))))))
+
+@(define-syntax (Defmodule stx)
+   (if local
+     #'(defmodule "processor.rkt" #:packages ())
+     #'(defmodule processor/processor #:packages ())))
+
 @(define-syntax-rule
    (Interaction x ...)
    (interaction/no-prompt
@@ -68,7 +82,7 @@
 @(define-syntax-rule (deffun x ...) (defproc #:kind "procedure" #:link-target? #f x ...))
 @(define-syntax-rule (defpred x ...) (defproc #:kind "predicate" #:link-target? #f x ...))
 @(define (tt . content) (element 'tt (apply list content)))
-@(define(minus) (tt "-"))
+@(define(minus) (tt "−"))
 @(define(-?) (element "roman" ?-))
 @(define (note . x) (inset (apply smaller x)))
 @(define (inset . x) (apply nested #:style 'inset x))

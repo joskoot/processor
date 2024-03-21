@@ -15,8 +15,11 @@
 @title{A simulator of a computer processor}
 @author{Jacob J. A. Koot}
 
-@;@defmodule["processor.rkt" #:packages ()]
-@(defmodule processor/processor #:packages ())
+@(Defmodule)
+
+@Tabular[
+ ((@nbhll["processor.rkt"]{source-code})
+  (@nbhll["examples.rkt"]{examples}))]
 
 @section{Introduction}
 
@@ -36,8 +39,6 @@ The instruction set is defined in a table.
 Both the @nbrl[assemble]{assembler} and the
 @nbrl[execute]{simulator} are driven by this table.
 
-@racket[
-]
 @Tabular[
  (("Notation" " ")
   ("n .. m" ": from n up to but not including m.")
