@@ -254,14 +254,13 @@ always to points to the memory word following the word from which the last instr
 
 ‘@tt{Ra}’, ‘@tt{Rb}’ and ‘@tt{Rb}’ are register designators: @tt{R0} to @tt{R7}@period @(lb)
 An instruction has the form
-@inset{@tt{(opcode-mnemonic etc ...)}}
+@inset{@tt{(opcode-mnemonic }detail@tt{ ...)}}
 It may be given a name for its address by writing
-@inset{@nb{@tt{(addres : opcode-mnemonic etc ...)}}}
-where @tt{addres} is a symbol other than a register designator
-and all @tt{addres}ses must be distinct.
+@inset{@nb{@tt{(addres : opcode-mnemonic @roman{detail} ...)}}}
+where @tt{addres} is a symbol other than a register designator or colon.@(lb)
+All @tt{addres}ses must be distinct.
 Comments can be inserted as:
 @inset{@tt{(: @roman{text of the comment})}}
-This implies that a colon cannot be used as address.
 @nb{All elements} of an instruction must be separated by blank space.
 ‘@tt{datum}’ denotes a datum in the form of an exact integer or an @tt{address}@period
 If the datum is an exact integer it is truncated to its 40 lower significant bits.
@@ -384,12 +383,12 @@ A negative shift count for @tt{SHE} effectively does @tt{SHL} without sign exten
                                                                  
 @section{Provided}
 
-@defproc[(assemble (‹instrs› (listof #, @nbsl["sec-assembler"]{instructions}))) void?]{
+@defproc[(assemble (‹instrs› (listof #, @nbsl["sec-assembler"]{instruction}))) void?]{
  @nbsl["sec-assembler"]{Assembles}
  the instructions and puts them in memory starting from address 0.@(lb)
  Before assembling the memory is cleared.}
 
-@defproc[(execute (‹instrs› (or/c #f (listof #, @nbsl["sec-assembler"]{instructions})) #f)) void?]{ 
+@defproc[(execute (‹instrs› (or/c #f (listof #, @nbsl["sec-assembler"]{instruction})) #f)) void?]{ 
  Resets all registers and executes the program currently in memory starting at address 0.
  @nb{If @nbr[‹instrs›]} is a list of instructions, the @nbrl[assemble]{assembler} is called first.}
 
@@ -512,21 +511,32 @@ A negative shift count for @tt{SHE} effectively does @tt{SHL} without sign exten
   (defidform #:kind "address register, program counter" PC)
   (defidform #:kind "instruction register" IR))]}
 
-hen called with an integer, it stores the integer in its input without changing its output.
+When called with an integer, it stores the integer in its input without changing its output.
 The integer is truncated to its 64/24 lower significant bits in case of a word/address.
 When called with @nbr['clock], it copies its input to its output.
 In all cases the output is returned.
 Register @tt{@bold{Rx}} is printed as @tt{#<Rx:h...>} where each @tt{h} is an hexadecimal digit,
 16 digits for a word and 6 digits for an address.
 
-@defform[(clock (‹R› ‹value›) ...)]{
+@defproc[#:kind "predicate" (register? (‹obj› any/c)) boolean?]{
+ True only if @nbr[‹obj›] is a @elemref["Rx"]{register} @tt{@bold{R0}} to @tt{@bold{R7}},
+ @tt{@bold{SP}}, @tt{@bold{PC}} or @tt{@bold{IR}}.}
+
+@defform[(clock (‹R› ‹value›) ...)
+         #:contracts ((‹R› register?) (‹value› exact-integer?))]{
  Same as @nbr[(begin (‹R› ‹value›) ... (‹R› 'clock) ...)]}
 
-@Interaction[
- (void (clock (R0 #xA ) (PC -10)))
- (list R0 PC)
- (void (clock (R1 (R0))))
- R1]
+@Interaction*[
+ (void (clock (R0 #xA) (PC -10)))
+ (list R0 PC)]
+
+In the following example @tt{@bold{R1}} receives the output of @tt{@bold{R0}}
+as present before clocking.
+
+@Interaction*[
+ (void (clock (R0 #xB) (R1 (R0))))
+ (list R0 R1)]
+@(reset-Interaction*)
 
 @section{Examples}
 
@@ -592,7 +602,7 @@ the subroutine is called and the result printed.
        (PSH R0)
        (PSH return)
        (JMP subroutine)
-       (: Upon return fetch the result and print ir)
+       (: Upon return fetch the result and print it)
        (return : POP R0)
        (OUT R0)
        (STP)

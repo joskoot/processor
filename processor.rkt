@@ -15,7 +15,8 @@
   max-nr-of-instrs
   catch-crash
   clock
-  R0 R1 R2 R3 R4 R5 R6 R7 SP PC IR)
+  R0 R1 R2 R3 R4 R5 R6 R7 SP PC IR
+  register?)
 
 (require (only-in racket ~r natural? match flatten remove-duplicates))
 
@@ -50,7 +51,8 @@
   (cond
     ((not x) '())
     ((eq? x 'all) (all-show-options))
-    ((and (list? x) (null? (remove* all-show-options x))) (remove-duplicates x))))
+    ((and (list? x) (null? (remove* all-show-options x))) (remove-duplicates x))
+    (else (raise-argument-error 'show "list of show details" x))))
 
 (define show (make-parameter all-show-options show-guard 'show))
 
@@ -77,6 +79,7 @@
       str)))
 
 (struct R (name proc) #:property prop:object-name 0 #:property prop:procedure 1)
+(define register? R?)
 (define (W-custom-write W port mode) (fprintf port "#<~s:~a>" (R-name W) (W-fmt-hex (W))))
 (define (A-custom-write A port mode) (fprintf port "#<~s:~a>" (R-name A) (A-fmt-hex (A))))
 (struct W R () #:property prop:custom-write W-custom-write)
