@@ -35,8 +35,8 @@ Memory caches, memory banking and virtual memory are not simulated.
 
 @Tabular[
  (("Notation" " ")
-  ("n..m" ": from n up to but not including m.")
-  ("n to m" ": from n up to and including m."))]
+  ("n .. m" ": from n up to but not including m.")
+  ("n :: m" ": from n up to and including m."))]
 
 @section{Definitions}
 
@@ -86,12 +86,12 @@ This makes reading hexadecimally printed instructions easier.
 
 @Tabular[
  (("name" "bits" "length" "description")
-  ("opcode" "56..64" "8 bits" "instruction code")
-  ("cc"     "52..56" "4 bits" "circuit control")
-  ("Ra"     "48..52" "4 bits" "register designator")
-  ("Rb"     "44..48" "4 bits" "register designator")
-  ("Rc"     "40..44" "4 bits" "register designator")
-  ("datum"  "00..40" "40 bits" "datum"))
+  ("opcode" "56 .. 64" "8 bits" "instruction code")
+  ("cc"     "52 .. 56" "4 bits" "circuit control")
+  ("Ra"     "48 .. 52" "4 bits" "register designator")
+  ("Rb"     "44 .. 48" "4 bits" "register designator")
+  ("Rc"     "40 .. 44" "4 bits" "register designator")
+  ("datum"  "00 .. 40" "40 bits" "datum"))
  #:row-properties '((top-border bottom-border) ()()()()() bottom-border)
  #:column-properties '(left left right left)
  #:sep @(hspace 2)]
@@ -104,7 +104,7 @@ and the comparing circuit @nbsl["sec-cmp"]{@tt{@bold{CMP}}}@period
 
 @Tabular[
  (("name" "size" "usage" "register designator?" "initial value")
-  (@roman{@tt{@bold{R0}} to @tt{@bold{R7}}} "word" "general purpose" "yes" "0")
+  (@roman{@tt{@bold{R0}} :: @tt{@bold{R7}}} "word" "general purpose" "yes" "0")
   (@tt{@bold{SP}} "address" "stack pointer"        "no" @roman{2@↑{24}−1})
   (@tt{@bold{PC}} "address" "program counter"      "no" "0")
   (@tt{@bold{IR}} "word"    "instruction register" "no" "na"))
@@ -252,7 +252,7 @@ always to points to the memory word following the word from which the last instr
 
 @section[#:tag "sec-assembler"]{Assembler}
 
-‘@tt{Ra}’, ‘@tt{Rb}’ and ‘@tt{Rb}’ are register designators: @tt{R0} to @tt{R7}@period @(lb)
+‘@tt{Ra}’, ‘@tt{Rb}’ and ‘@tt{Rb}’ are register designators: @tt{R0} :: @tt{R7}@period @(lb)
 An instruction has the form
 @inset{@tt{(opcode-mnemonic }detail@tt{ ...)}}
 It may be given a name for its address by writing
@@ -458,7 +458,7 @@ A negative shift count for @tt{SHE} effectively does @tt{SHL} without sign exten
  this exception is catched and procedure @nbr[execute] returns normally.}
 
 @defproc[(print-memory (‹n› exact-nonnegative-integer?) (‹m› exact-nonnegative-integer?)) void?]{
- Prints words @nbr[‹n›]..@nbr[‹n›]+@nbr[‹m›] of memory.
+ Prints words @nbr[‹n›] .. @nbr[‹n›]+@nbr[‹m›] of memory.
  Each word is preceded by its hexadecimal address.}
 
 @defproc[(print-stack (‹n› exact-nonnegative-integer?)) void?]{
@@ -480,7 +480,7 @@ A negative shift count for @tt{SHE} effectively does @tt{SHL} without sign exten
  (print-stack 5)]}
 
 @defproc[(print-registers) void?]{
- Prints registers @nbr[R0] to @nbr[R7],
+ Prints registers @nbr[R0] :: @nbr[R7],
  @nbr[SP] and @nbr[PC].}
 
 @defparam[max-nr-of-instrs ‹n› exact-nonnegative-integer? #:value 1000]{
@@ -519,7 +519,7 @@ Register @tt{@bold{Rx}} is printed as @tt{#<Rx:h...>} where each @tt{h} is an he
 16 digits for a word and 6 digits for an address.
 
 @defproc[#:kind "predicate" (register? (‹obj› any/c)) boolean?]{
- True only if @nbr[‹obj›] is a @elemref["Rx"]{register} @tt{@bold{R0}} to @tt{@bold{R7}},
+ True only if @nbr[‹obj›] is a @elemref["Rx"]{register} @tt{@bold{R0}} :: @tt{@bold{R7}},
  @tt{@bold{SP}}, @tt{@bold{PC}} or @tt{@bold{IR}}.}
 
 @defform[(clock (‹R› ‹value›) ...)
