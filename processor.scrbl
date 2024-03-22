@@ -30,7 +30,7 @@ An instruction that does not access memory takes one clock cycle,
 the next instruction being read within the same cycle.
 When the instruction accesses memory,
 the next instruction is read during an additional cycle.
-Input and output from or to a port takes as many cycles as words read or written
+Input and output from or to a port take as many cycles as words read or written
 plus an additional cycle to read the next instruction.
 In fact a program takes exactly as many cycles as
 the number of words transferred from or to memory.
@@ -38,7 +38,7 @@ Memory caches, memory banking and virtual memory are not simulated.
 The instruction set is defined in a table.
 Both the @nbrl[assemble]{assembler} and the
 @nbrl[execute]{simulator} are driven by this table.
-@nb{See variable @tt{M-table}} in the @nbhll["processor.rkt"]{source-code}.
+@nb{See variable @tt{M-table}} in the @nbhll["examples.rkt"]{source-code}.
 
 @Tabular[
  (("Notation" " ")
