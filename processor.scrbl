@@ -124,11 +124,11 @@ depending on the operation code in the @tt{@bold{IR}}@period
 
 @section{Clock}
 The simulator has a virtual clock.
-Virtually registers and circuits run simultaneously.
+Virtually registers and circuits are triggered simultaneously.
 Registers are clocked.
-At clock raise they accept their inputs without altering their outputs.
-At clock drop they transfer their inputs to their outputs.
-An instruction is executed by first triggering the involved registers for clock raise
+@nb{At clock} raise they accept their inputs without altering their outputs.
+@nb{At clock} drop they transfer their inputs to their outputs.
+@nb{An instruction} is executed by first triggering the involved registers for clock raise
 and subsequently triggering them for clock drop.
 Memory, when activated, starts reading or writing at clock-raise
 and finishes reading before clock-drop and writing within the clock-cycle.
@@ -167,13 +167,18 @@ Overflow is ignored. Arithmetic instructions take one clock-cycle.
 The arithmetic compare unit @tt{@bold{CMP}} wants one or two word inputs:
 @tt{@bold{C1}} and @tt{@bold{C2}}@period
 When @tt{@bold{C2}} is ommitted @tt{@bold{C1}} is compared to zero.
-It has no output.
 The @tt{cc} field of the @tt{@bold{IR}} tells the @tt{@bold{CMP}}
 which arithmetic comparison to perform.
 It is used in conditional jump operations.
 If the comparator yields false, it inhibits the jump.
 The comparison is made for two's complement words and is not faulted by overflow.
 Jumps, both unconditional ones and both accepted or inhibited conditional ones take one clock-cycle.
+As the micro-processor has no instruction cash
+and does nothing else than selecting registers and circuits to be clocked,
+there is no read ahead and no speculative execution of subsequent instructions
+before finishing the current one.
+Most instructions, all jumps included,
+fetch the next instruction from memory in the same clock cycle as the one currently being executed.
 
 @section[#:tag "sec-circuits"]{Circuits}
 
@@ -271,7 +276,11 @@ Comments can be inserted as:
 @nb{All elements} of an instruction must be separated by blank space.
 ‘@tt{datum}’ denotes a datum in the form of an exact integer or an @tt{address}@period
 If the datum is an exact integer it is truncated to its 40 lower significant bits.
-When occurring in a @tt{DATUM} declaration it is truncated to the 64 lower significant bits.
+@nb{A ‘@tt{literal}’} can occur in @tt{DATUM} and @tt{DATA} declarations.
+It is an @tt{address} or an exact integer,
+the latter being truncated to the 64 lower significant bits.
+When used as a @tt{literal} an @tt{address}
+is extended with 40 zero bits at the high significant end.
 Arithmetical operations are in two's complement. Overflow is ignored.
 
 @Tabular[
@@ -370,8 +379,8 @@ Arithmetical operations are in two's complement. Overflow is ignored.
     @roman{Read words into memory at addresses from Ra .. Ra+Rb})
   (@nb{@tt{(RÆD Ra datum)}}
     @roman{Read words into memory at addresses from Ra .. Ra+datum})
-  (@nb{@tt{(DATUM datum)}} @roman{Not ment to be executed as instruction.})
-  (@nb{@tt{(DATA datum ...)}} @roman{Expanded to repeated @tt{DATUM}@period})
+  (@nb{@tt{(DATUM literal)}} @roman{Not ment to be executed as instruction.})
+  (@nb{@tt{(DATA literal ...)}} @roman{Expanded to repeated @tt{DATUM}@period})
   (@nb{@tt{(: @roman{comment} ...)}} @roman{Ignored.}))
  #:sep (hspace 2)
  #:row-properties '(top top)]
