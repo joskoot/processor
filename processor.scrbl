@@ -23,7 +23,7 @@
 
 @section{Introduction}
 
-The @nbrl[execute]{simulator} described in the present document executes a binary coded program
+The simulator described in the present document @nbrl[execute]{executes} a binary coded program
 that can be made with its @nbsl["sec-assembler"]{assembler}@period
 Every instruction consists of one word.
 An instruction that does not access memory takes one clock cycle,
