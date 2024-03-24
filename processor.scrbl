@@ -222,8 +222,8 @@ register or circuit input from its exit.
 Four of the fixed busses, marked by ‘f’, always are open.
 The other eight, marked by ‘s’, are open during clock up period when selected by the opcode.
 When a datum is transferred to a word register it is sign extended.
-When a datum is used as an address it is truncated to its 24 lower significant bits.
-When a word is transferred to an address register it is truncated to its 24 lower significant bits.
+When a word or a datum is transferred to an address register
+it is truncated to its 24 lower significant bits.
 When an address is transferred to a word-register it is extended with zero bits
 at the high significant end.
 
@@ -276,12 +276,14 @@ Comments can be inserted as:
 @nb{All elements} of an instruction must be separated by blank space.
 ‘@tt{datum}’ denotes a datum in the form of an exact integer or an @tt{address}@period
 If the datum is an exact integer it is truncated to its 40 lower significant bits.
-@nb{A ‘@tt{literal}’} can occur in @tt{DATUM} and @tt{DATA} declarations.
-It is an @tt{address} or an exact integer,
-the latter being truncated to the 64 lower significant bits.
-When used as a @tt{literal} an @tt{address}
-is extended with 40 zero bits at the high significant end.
-Arithmetical operations are in two's complement. Overflow is ignored.
+If it is an @tt{address} it is extended to a datum by adding zero bits at the high-significant end.
+@nb{A ‘@tt{word/addr}’} can occur in @tt{DATUM} and @tt{DATA} declarations.
+It must be an exact integer or an @tt{address}. 
+If it is an integer it is truncated to the 64 lower significant bits.
+When it is an @tt{address}
+it is extended to a word by adding zero bits at the high significant end.
+Arithmetical operations are in two's complement.
+Overflow is ignored.
 
 @Tabular[
  ((@nb{@tt{(STP)}} @roman{Halts the processor.})
@@ -294,9 +296,14 @@ Arithmetical operations are in two's complement. Overflow is ignored.
   (@nb{@tt{(SUB Ra Rb datum)}} @roman{@tt{Ra} ← @tt{Rb}−@tt{datum}@period})
   (@nb{@tt{(MUL Ra Rb Rc)}} @roman{@tt{Ra} ← @tt{Rb}×@tt{Rc}@period})
   (@nb{@tt{(MUL Ra Rb datum)}} @roman{@tt{Ra} ← @tt{Rb}×@tt{datum}@period})
-  (@nb{@tt{(DIV Ra Rb Rc)}} @roman{@tt{Ra} ← @tt{Rb/Rc}, integer division@period})
+  (@nb{@tt{(DIV Ra Rb Rc)}} @roman{@tt{Ra} ← @tt{Rb/Rc}, integer division
+  (crash if @tt{Rc} is zero)})
   (@nb{@tt{(DIV Ra Rb datum)}} @roman{@tt{Ra} ← @tt{Rb/Rdatum},
-  integer division@period})
+  integer division@period (crash if @tt{datum} is zero)})
+  (@nb{@tt{(REM Ra Rb Rc)}} @roman{@tt{Ra} ← remainder of @tt{Rb/Rc}
+  (crash if @tt{Rc} is zero)})
+  (@nb{@tt{(REM Ra Rb datum)}} @roman{@tt{Ra} ← remainder of @tt{Rb/Rdatum}
+  (crash if @tt{datum} is zero)})
   (@nb{@tt{(SHL Ra Rb Rc)}} @roman{Put @tt{Rb} into @tt{Ra},
   left shifted by @tt{Rc} bits.})
   (@nb{@tt{(SHL Ra Rb datum)}} @roman{Put @tt{Rb} into @tt{Ra},
@@ -379,8 +386,8 @@ Arithmetical operations are in two's complement. Overflow is ignored.
     @roman{Read words into memory at addresses from Ra .. Ra+Rb})
   (@nb{@tt{(RÆD Ra datum)}}
     @roman{Read words into memory at addresses from Ra .. Ra+datum})
-  (@nb{@tt{(DATUM literal)}} @roman{Not ment to be executed as instruction.})
-  (@nb{@tt{(DATA literal ...)}} @roman{Expanded to repeated @tt{DATUM}@period})
+  (@nb{@tt{(DATUM word/addr)}} @roman{Not ment to be executed as instruction.})
+  (@nb{@tt{(DATA word/addr ...)}} @roman{Expanded to repeated @tt{DATUM}@period})
   (@nb{@tt{(: @roman{comment} ...)}} @roman{Ignored.}))
  #:sep (hspace 2)
  #:row-properties '(top top)]
