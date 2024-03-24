@@ -483,7 +483,12 @@ A negative shift count for @tt{SHE} effectively does @tt{SHL} without sign exten
  In case of a crash procedure @nbr[execute]
  prints a message on the @nbr[current-error-port] and halts by raising an exception.
  If this parameter is set to a true value,
- this exception is catched and procedure @nbr[execute] returns normally.}
+ this exception is catched and procedure @nbr[execute] returns normally.
+
+ @Interaction[
+ (parameterize ((catch-crash #t))
+   (execute '((DATUM -1)))
+   (displayln "crash has been catched"))]}
 
 @defproc[(print-memory (‹n› exact-nonnegative-integer?) (‹m› exact-nonnegative-integer?)) void?]{
  Prints words @nbr[‹n›] .. @nbr[‹n›]+@nbr[‹m›] of memory.
@@ -595,23 +600,24 @@ R2 : Next fibonacci number, initially 1@(lb)
 R4 : 1 for decrementing R0
 
 @Interaction[
- (assemble
-   '((SET R0 10)
-     (SET R1 0)
-     (SET R2 1)
-     (SET R4 1)
-     (=0? R0 end)
-     (loop : OUT R1)
-     (ADD R3 R1 R2)
-     (SET R1 R2)
-     (SET R2 R3)
-     (SUB R0 R0 R4)
-     (>0? R0 loop)
-     (end : OUT R1)
-     (OUT R2)
-     (STP)))
+ (parameterize ((show #f))
+   (assemble
+     '((SET R0 10)
+       (SET R1 0)
+       (SET R2 1)
+       (SET R4 1)
+       (=0? R0 end)
+       (loop : OUT R1)
+       (ADD R3 R1 R2)
+       (SET R1 R2)
+       (SET R2 R3)
+       (SUB R0 R0 R4)
+       (>0? R0 loop)
+       (end : OUT R1)
+       (OUT R2)
+       (STP))))
  (let ((op (open-output-string)))
-   (parameterize ((OUT-port op))
+   (parameterize ((OUT-port op) (show '(instructions)))
      (execute)
      (display (get-output-string op))))]
 
@@ -651,12 +657,13 @@ In the following example instruction @green{@tt{NOP}} at address @green{@tt{noot
 is replaced by instruction @green{@tt{OUT}} found at address @green{@tt{aap}}.
 
 @Interaction[
- (execute
-   '((MRD R1 aap)
-     (MWR R1 noot)
-     (NOP)
-     (noot : NOP)
-     (STP)
-     (aap : OUT R1)))]
+ (parameterize ((show '(instructions registers)))
+   (execute
+     '((MRD R1 aap)
+       (MWR R1 noot)
+       (NOP)
+       (noot : NOP)
+       (STP)
+       (aap : OUT R1))))]
 
 @larger{@bold{The end}}
