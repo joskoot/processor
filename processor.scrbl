@@ -23,7 +23,7 @@
 
 @section{Introduction}
 
-The simulator described in the present document executes a binary coded program
+The @nbrl[execute]{simulator} described in the present document executes a binary coded program
 that can be made with its @nbsl["sec-assembler"]{assembler}@period
 Every instruction consists of one word.
 An instruction that does not access memory takes one clock cycle,
@@ -418,32 +418,37 @@ A negative shift count for @tt{SHE} effectively does @tt{SHL} without sign exten
 @defparam*[show ‹options›
  (or/c #f 'all
    (listof
+     (or/c
+       'source-code
+       'binary-code
+       'instructions
+       'registers)))
+ (listof
+   (or/c
      'source-code
      'binary-code
      'instructions
      'registers))
- (listof
-   'source-code
-   'binary-code
-   'instructions
-   'registers)
- #:value 'all]{
+ #:value '(source-code binary-code instructions registers)]{
  @nbr[(show 'all)] activates all options.@(lb)
  @nbr[(show #f)] and @nbr[(show '())] disable all options.
 
- When this parameter contains @nbr['source-code],@(lb)
+ When this parameter contains option @nbr['source-code],@(lb)
  the @nbrl[assemble]{assembler} shows the program to be assembled.
  
- When this parameter contains @nbr['binary-code],@(lb)
+ When this parameter contains option @nbr['binary-code],@(lb)
  procedure @nbr[assemble] shows the assembled binary code.
 
- When this parameter contains @nbr['instructions],@(lb)
+ When this parameter contains option @nbr['instructions],@(lb)
  procedure @nbr[execute] prints all executed instructions:
- @inset{@tt{line-nr address mnemonic opcode cc ra rb rc datum cycle-count}}
+ @inset{@blue{@tt{line-nr} @tt{:} @tt{mnemonic}
+   @tt{:}
+   @tt{opcode} @tt{cc} @tt{ra} @tt{rb} @tt{rc} @tt{datum} @tt{:}
+   @tt{address} @tt{:} @tt{cycle-count}}}
  The elements are printed in hexadecimal form,@(lb)
  the line-nr, mnemonic and cycle-count excepted.
 
- When this parameter contains @nbr['registers],@(lb)
+ When this parameter contains option @nbr['registers],@(lb)
  procedure @nbr[execute] shows the contents
  of registers after completion of the program.}
 
