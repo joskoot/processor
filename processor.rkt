@@ -5,6 +5,7 @@
 (provide
   execute
   assemble
+  reset
   INP-port
   OUT-port
   show
@@ -19,7 +20,6 @@
   register?)
 
 (require (only-in racket ~r natural? match flatten remove-duplicates))
-
 (define INTEGER? exact-integer?)
 (define AND bitwise-and)
 (define IOR bitwise-ior)
@@ -257,7 +257,7 @@
           (#x7 SHE ,(λ (Ra Rb Rc) (SHE           Ra Rb Rc)))
           (#x8 AND ,(λ (Ra Rb Rc) (ALU AND       Ra Rb Rc)))
           (#x9 IOR ,(λ (Ra Rb Rc) (ALU IOR       Ra Rb Rc))))
-    (#x04 (#x0 NEG ,(λ (Ra Rb)    (ALU-unary -   Ra Rb)   ))
+    (#x04 (#x0 NEG ,(λ (Ra Rb)    (ALU-unary -   Ra Rb   )))
           (#x1 NOT ,(λ (Ra Rb)    (ALU-unary NOT Ra Rb   ))))
     (#x05 (#f  JMP ,JMP))
     (#x06 (#x0 EQ? ,(λ (Ra Rb Rc) (CMP =         Ra Rb Rc)))
@@ -494,3 +494,6 @@
 (define (reset) (reset-registers) (MEM-reset))
 
 (reset)
+
+;═════════════════════════════════════════════════════════════════════════════════════════════════════
+
