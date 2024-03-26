@@ -1,7 +1,5 @@
 #lang racket/base
 
-;═════════════════════════════════════════════════════════════════════════════════════════════════════
-
 (provide
   execute
   assemble
@@ -26,7 +24,7 @@
 (define NOT bitwise-not)
 (define SHIFTL arithmetic-shift)
 (define (SHIFTR e k) (arithmetic-shift e (- k)))
-(define (~h e width) (string-upcase (~r e #:min-width width #:base 16 #:pad-string "0")))
+
 (define (force-bool b) (and b #t))
 
 (define (OUT-port-guard p)
@@ -63,6 +61,8 @@
 (define (show-source-code) (memq 'source-code (show)))
 (define (show-instructions) (memq 'instructions (show)))
 (define (show-registers) (memq 'registers (show)))
+
+(define (~h e width) (string-upcase (~r e #:min-width width #:base 16 #:pad-string "0")))
 
 (define (print-registers)
   (for ((R (in-list registers))) (printf "~s : ~s~n" R (R)))
@@ -163,6 +163,16 @@
   (for ((addr (in-range from (+ from n) 1))) (out (MEM-ref addr)))
   (clock+))
 
+(define (inp who) ; Read one word
+  (define w (read (INP-port)))
+  (unless (INTEGER? w) (raise-argument-error who "exact-integer?" w))
+  w)
+
+(define (out w) ; Write one word
+  (fprintf (OUT-port) "output : ~a : ~s~n"
+    (W-fmt-hex w)
+    (W-sign-extend w)))
+
 (define MEM (make-vector MEM-size 0))
 (define (MEM-reset) (set! MEM (make-vector MEM-size 0)))
 (define cycle-count 0)
@@ -190,20 +200,6 @@
     (define w (MEM-ref k))
     (printf "~a : ~a : ~s~n" (A-fmt-hex k) (W-fmt-hex w) (W-sign-extend w))))
 
-(define (inp who) ; Read one word
-  (define w (read (INP-port)))
-  (unless (INTEGER? w) (raise-argument-error who "exact-integer?" w))
-  w)
-
-(define (out w) ; Write one word
-  (fprintf (OUT-port) "output : ~a : ~s~n"
-    (W-fmt-hex w)
-    (W-sign-extend w)))
-
-(define-syntax-rule (clock (R v) ...) (begin (R v) ... (R 'clock) ...))
-(define-syntax-rule (clock+ (R v) ...) (clock (R v) ... (IR (MEM-ref (PC))) (PC (add1 (PC)))))
-(define-syntax-rule (clock! (R v) ...) (begin (clock (R v) ...) (clock+)))
-
 (define M-table
   `((#x00 (#f  STP ,(λ () (void))))
     (#x01 (#f  NOP ,NOP))
@@ -219,7 +215,7 @@
           (#x8 AND ,(λ (Ra Rb Rc) (AND           Ra Rb Rc)))
           (#x9 IOR ,(λ (Ra Rb Rc) (IOR           Ra Rb Rc))))
     (#x04 (#x0 NEG ,(λ (Ra Rb)    (ALU-unary -   Ra Rb   )))
-          (#x1 NOT ,(λ (Ra Rb)    (NOT           Ra Rb   ))))
+          (#x1 NOT ,(λ (Ra Rb)    (ALU-unary NOT Ra Rb   ))))
     (#x05 (#f  JMP ,JMP))
     (#x06 (#x0 EQ? ,(λ (Ra Rb Rc) (CMP =         Ra Rb Rc)))
           (#x1 LT? ,(λ (Ra Rb Rc) (CMP <         Ra Rb Rc)))
@@ -334,7 +330,9 @@
   (if (eq? R 'DA) 8
     (hash-ref R->r-hash R (λ () (error 'assemble "unknown register: ~s" R)))))
 
-;═════════════════════════════════════════════════════════════════════════════════════════════════════
+(define-syntax-rule (clock (R v) ...) (begin (R v) ... (R 'clock) ...))
+(define-syntax-rule (clock+ (R v) ...) (clock (R v) ... (IR (MEM-ref (PC))) (PC (add1 (PC)))))
+(define-syntax-rule (clock! (R v) ...) (begin (clock (R v) ...) (clock+)))
 
 (define (execute (source-code #f))
   (define (handler exn) (displayln (exn-message exn) (current-error-port)))
