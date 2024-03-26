@@ -402,7 +402,15 @@ They take as many cycles as words read or written
 plus an additional cycle to read the next instruction.
 @tt{SHL}, @tt{SHR} and @tt{SHE} take the shift counts as signed.
 A negative shift-count for @tt{SHL} effectively does @tt{SHR} and reversely.
-A negative shift count for @tt{SHE} effectively does @tt{SHL} without sign extension and reversely.
+A negative shift count for @tt{SHE} effectively does @tt{SHL}.
+
+@Interaction[
+ (parameterize ((show #f))
+   (execute
+     '((SET R1 #xFFFFFFFF000000FF)
+       (OUT R1)
+       (SHE R2 R1 -8)
+       (OUT R2))))]
                                                                  
 @section{Provided}
 
