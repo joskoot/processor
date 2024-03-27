@@ -12,7 +12,7 @@
 
 @(define period (roman "."))
 
-@title{A simulator of a computer processor}
+@title{Simulation of a computer}
 @author{Jacob J. A. Koot}
 
 @(Defmodule)
