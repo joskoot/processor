@@ -83,7 +83,7 @@ would slow down the simulation too,
 even without page faults,
 but would allow a larger address space.
 
-@section[#:tag "sec-instruction-register"]{The instruction register}
+@section[#:tag "sec-instruction-register"]{Instruction register}
 
 Instruction register @tt{@bold{IR}} contains a word in which the components
 listed below are discerned.
@@ -540,14 +540,14 @@ A negative shift count for @tt{SHE} effectively does @tt{SHL}.
          exact-nonnegative-integer?]{
  @nbpr{Rx} is one of the following:}
 @inset{@deftogether[
- ((defidform #:kind "general purpose word register" R0)
-  (defidform #:kind "general purpose word register" R1)
-  (defidform #:kind "general purpose word register" R2)
-  (defidform #:kind "general purpose word register" R3)
-  (defidform #:kind "general purpose word register" R4)
-  (defidform #:kind "general purpose word register" R5)
-  (defidform #:kind "general purpose word register" R6)
-  (defidform #:kind "general purpose word register" R7)
+ ((defidform #:kind "word register, general purpose" R0)
+  (defidform #:kind "word register, general purpose" R1)
+  (defidform #:kind "word register, general purpose" R2)
+  (defidform #:kind "word register, general purpose" R3)
+  (defidform #:kind "word register, general purpose" R4)
+  (defidform #:kind "word register, general purpose" R5)
+  (defidform #:kind "word register, general purpose" R6)
+  (defidform #:kind "word register, general purpose" R7)
   (defidform #:kind "address register, stack pointer" SP)
   (defidform #:kind "address register, program counter" PC)
   (defidform #:kind "instruction register" IR))]}
