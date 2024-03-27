@@ -301,6 +301,9 @@ Overflow is ignored.
   (crash if @tt{Rc} is zero)})
   (@nb{@tt{(DIV Ra Rb datum)}} @roman{@tt{Ra} ← @tt{Rb/Rdatum},
   integer division@period (crash if @tt{datum} is zero)})
+  (@nb{@tt{(MOD Ra Rb Rc)}} @roman{@tt{Ra} ← @tt{Rb} modulo @tt{Rc} (crash if @tt{Rc} is zero)})
+  (@nb{@tt{(MOD Ra Rb datum)}} @roman{@tt{Ra} ← @tt{Rb} modulo @tt{datum}
+  (crash if @tt{datum} is zero)})
   (@nb{@tt{(REM Ra Rb Rc)}} @roman{@tt{Ra} ← remainder of @tt{Rb/Rc}
   (crash if @tt{Rc} is zero)})
   (@nb{@tt{(REM Ra Rb datum)}} @roman{@tt{Ra} ← remainder of @tt{Rb/Rdatum}
@@ -310,7 +313,7 @@ Overflow is ignored.
   (@nb{@tt{(SHL Ra Rb datum)}} @roman{Put @tt{Rb} into @tt{Ra},
   left shifted by @tt{datum} bits.})
   (@nb{@tt{(SHR Ra Rb Rc)}} @roman{Put @tt{Rb} into @tt{Ra},
-  right shifted by @tt{Rc} bits without sign extension.})
+  right shifted by @tt{Rc} bits, no sign extension.})
   (@nb{@tt{(SHR Ra Rb datum)}}
     @roman{Put @tt{Rb} into @tt{Ra} right shifted by @tt{datum} bits, no sign extension.})
   (@nb{@tt{(SHE Ra Rb Rc)}} @roman{Put @tt{Rb} into @tt{Ra},
