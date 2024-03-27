@@ -30,7 +30,8 @@ An instruction that does not access memory takes one clock cycle,
 the next instruction being read within the same cycle.
 When the instruction accesses memory,
 the next instruction is read during an additional cycle.
-Input and output from or to a port take as many cycles as words read or written
+Input from a port to memory and output to a port from memory
+take as many cycles as words read or written
 plus an additional cycle to read the next instruction.
 In fact a program takes exactly as many cycles as
 the number of words transferred from or to memory.
