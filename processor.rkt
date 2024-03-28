@@ -80,6 +80,12 @@
       (string-append (make-string (- m n) #\space) str)
       str)))
 
+(define (reset-registers)
+  (for ((R (in-list registers))) (clock (R 0)))
+  (clock (PC 0) (SP A-mask)))
+
+(define (reset) (reset-registers) (MEM-reset))
+
 ;═════════════════════════════════════════════════════════════════════════════════════════════════════
 
 (struct R (name proc) #:property prop:object-name 0 #:property prop:procedure 1)
@@ -493,13 +499,6 @@
 
 ;═════════════════════════════════════════════════════════════════════════════════════════════════════
 
-(define (reset-registers)
-  (for ((R (in-list registers))) (clock (R 0)))
-  (clock (PC 0) (SP A-mask)))
-
-(define (reset) (reset-registers) (MEM-reset))
-
 (reset)
 
 ;═════════════════════════════════════════════════════════════════════════════════════════════════════
-

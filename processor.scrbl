@@ -16,10 +16,11 @@
 @author{Jacob J. A. Koot}
 
 @(Defmodule)
-
-@Tabular[
- ((@nbhll["processor.rkt"]{source-code})
-  (@nbhll["examples.rkt"]{examples}))]
+Related files:
+@inset{@Tabular[
+ ((@nbhll["processor.rkt"]{processor.rkt})
+  (@nbhll["examples.rkt"]{examples.rkt})
+  (@nbhll["tests.rkt"]{tests.rkt}))]}
 
 @section{Introduction}
 
