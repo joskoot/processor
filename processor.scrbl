@@ -18,9 +18,10 @@
 @(Defmodule)
 Related files:
 @inset{@Tabular[
- ((@nbhll["processor.rkt"]{processor.rkt})
-  (@nbhll["examples.rkt"]{examples.rkt})
-  (@nbhll["tests.rkt"]{tests.rkt}))]}
+ ((@nbhll["processor.rkt"]{processor.rkt} "Source code of the simulator")
+  (@nbhll["examples.rkt"]{examples.rkt} "")
+  (@nbhll["tests.rkt"]{tests.rkt} (list "Requires "@url["https://github.com/joskoot/test"])))
+ #:sep (hspace 2)]}
 
 @section{Introduction}
 
