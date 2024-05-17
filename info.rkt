@@ -1,4 +1,4 @@
 #lang info
-(define scribblings '(("processor.scrbl" ())))
+(define scribblings '(("simulator.scrbl" ())))
 (define collection "processor")
 (define name "processor")
