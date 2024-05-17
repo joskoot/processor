@@ -515,7 +515,7 @@ A negative shift count for @tt{SHE} effectively does @tt{SHL}.
  the instructions are put in memory starting from address @nbr[‹offset›] but
  without clearing memory first.
  @nb{If @nbr[‹target›]} is @nbr['list]
- the code is returned as a list: @nb{@tt{((address instr) ...)}}.
+ the code is returned as a list: @nb{@tt{((address . instr) ...)}}.
 
  @Interaction[
  (define binary-code
