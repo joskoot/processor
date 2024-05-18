@@ -440,7 +440,7 @@ No floating point instructions are implemented.
            @nb{@tt{(INP Ra)}} @roman{Reads a word from @nbr[INP-port] and puts it in Ra.})
          
          (list @(~op 'OUT)
-           @nb{@tt{(OUT Rde)}} @roman{Print @tt{Rd} on @nbr[OUT-port].})
+           @nb{@tt{(OUT Rd)}} @roman{Print @tt{Rd} on @nbr[OUT-port].})
          
          (list @(~op 'RÆD)
            @nb{@tt{(RÆD Ra Rd)}}
