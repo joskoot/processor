@@ -320,7 +320,7 @@ If it is an integer it is truncated to the 64 lower significant bits.
 When it is an @tt{address}
 it is extended to a word by adding zero bits at the high significant end.
 
-Arithmetical operations are signed in two's complement.
+Arithmetic operations are signed in two's complement.
 Overflow is ignored.@(lb)
 No floating point instructions are implemented.
 
