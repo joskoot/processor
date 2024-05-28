@@ -76,7 +76,7 @@ It would be nice to have a memory of more than 2@↑{20} words.
 In principle 20 can be increased to 44
 resulting in an address space of a more than 17×10@↑{12} words or 140×10@↑{12} bytes,
 but as the simulator keeps memory in a vector,
-this makes the @nbrl[assemble]{assembler} and procedure @nbr[execute] use more words
+this makes the @nbrl[assemble]{assembler} and procedure @nbr[execute] use more memory
 than acceptable for DrRacket or Racket
 or available in your computer.
 Memory caches and banking would slow down the simulation.
