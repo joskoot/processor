@@ -84,7 +84,7 @@ Virtual memory in a file with a limited number of pages in RAM
 would slow down the simulation too,
 even without page faults,
 but would allow a larger address space.
-Anyway, you wouldn't want to use the simulator for programs of more than a million words.
+Anyway, you wouldn't want to use the simulator for programs of requiring more than a million words.
 
 @section[#:tag "sec-instruction-register"]{Instruction register}
 
@@ -312,7 +312,7 @@ Comments can be inserted as:
 If it is an exact integer it is truncated to its 44 lower significant bits.
 If it is an @tt{address} it is extended to a datum by adding zero bits at the high-significant end.
 
-‘@tt{Rd}’ is ‘@tt{Ra}’, ‘@tt{Rb}’, ‘@tt{Rc}’ or a @tt{d}.
+‘@tt{Rd}’ is ‘@tt{Ra}’, ‘@tt{Rb}’, ‘@tt{Rc}’ or a @tt{d} sign extended to 64 bits.
 
 @nb{A ‘@tt{w/a}’} can occur in @tt{DATUM} and @tt{DATA} declarations.
 It must be an exact integer or an @tt{address}. 
@@ -385,7 +385,7 @@ No floating point instructions are implemented.
            @nb{@tt{(AND Ra Rb Rd)}} @roman{@tt{Ra} ← @tt{Rb˄Rd}, bitwise and.})
          
          (list @(~op 'IOR)
-           @nb{@tt{(IOR Ra Rb Rc)}} @roman{@tt{Ra} ← @tt{Rb˅Rd}, bitwise inclusive or.})
+           @nb{@tt{(IOR Ra Rb Rd)}} @roman{@tt{Ra} ← @tt{Rb˅Rd}, bitwise inclusive or.})
          
          (list @(~op 'NEG)
            @nb{@tt{(NEG Ra Rd)}} @roman{@tt{Ra} ← −@tt{Rd}.})
@@ -623,7 +623,8 @@ A negative shift count for @tt{SHE} effectively does @tt{SHL}.
 @Interaction[
  (parameterize ((catch-crash #t))
    (execute
-     '((DIV R0 R0 R0))))]}
+     '((DIV R0 R0 R0)))
+   (displayln "crash has been catched"))]}
 
 @defproc[(print-memory (‹n› exact-nonnegative-integer?) (‹m› exact-nonnegative-integer?)) void?]{
  Prints words from addresses @nbr[‹n›] .. @nbr[‹n›]+@nbr[‹m›] of memory.@(lb)
