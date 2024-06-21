@@ -84,7 +84,7 @@ Virtual memory in a file with a limited number of pages in RAM
 would slow down the simulation too,
 even without page faults,
 but would allow a larger address space.
-Anyway, you wouldn't want to use the simulator for programs of requiring more than a million words.
+Anyway, you wouldn't want to use the simulator for programs requiring more than a million words.
 
 @section[#:tag "sec-instruction-register"]{Instruction register}
 
