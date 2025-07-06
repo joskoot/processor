@@ -146,8 +146,7 @@ and subsequently triggering them for clock drop.
 Memory, when activated, starts reading or writing at clock-raise
 and finishes reading before clock-drop and writing within the clock-cycle.
 Other elements are not clocked.
-When their inputs change the clock does not drop before the possible mutation
-of their outputs is accomplished.
+When their inputs change the possibly mutated output becomes available before the clock drops.
 
 @section[#:tag "sec-memory"]{Memory}
 
